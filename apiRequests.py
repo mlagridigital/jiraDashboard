@@ -23,7 +23,7 @@ def get_stories(sprint):
 	querystring = {
 		"jql" : "project = ADS AND sprint = " + str(sprint) + " AND type in standardIssueTypes()",
 		"maxResults" : "100",
-		"fields" : "status, subtasks, issuetype"
+		"fields" : "status, subtasks, issuetype, summary, timespent"
 	}
 
 	headers = {
@@ -41,7 +41,7 @@ def get_stories(sprint):
 	print("Recieved:", len(parsed['issues']), "/", parsed['total'] ,"stories")
 
 
-	return parsed
+	return parsed['issues']
 
 
 def get_subtasks(sprint):
@@ -73,7 +73,7 @@ def get_subtasks(sprint):
 	print("Requesting subtasks in sprint:", sprint)
 	print("Recieved:", len(parsed['issues']), "/", parsed['total'] ,"subtasks")
 
-	return parsed
+	return parsed['issues']
 
 
 
@@ -103,15 +103,65 @@ def create_lookup(parsed):
 	return(subtask_keys)
 
 
+def format_data(stories, subtasks):
+
+	subtasksFormated = [{
+		"id" : int,
+		"key" : "",
+		"self" : "",
+		"issuetype" : "",
+		"issuetypeIcon" :"",
+		"timeestimate" : int,
+		"remainingEstimate" : int,
+		"timespent" : int,
+	}]
+
+	storiesFormated = [{
+		"id" : int,
+		"key" : "",
+		"self" : "",
+		"issuetype" : "",
+		"issuetypeIcon" :"",
+		"timeestimate" : int,
+		"remainingEstimate" : int,
+		"timespent" : int,
+		"subtasks" : subtasksFormated
+	}]
+
+	# Support Issues are filtered and count and timeSpent is collected 
+	supportIssues = {
+		"count" : 0,
+		"timespent" : 0,
+	}
+
+
+	for i, issue in enumerate(stories):
+		print("_" * 20)
+		print(issue['fields']['issuetype']['name'])
+		issue['fields']['issuetype']['name'] == "Support "
+
+		if issue['fields']['issuetype']['name'] == "Support ":
+			# supportIssues['count'] += 1
+			if isinstance(issue['fields']['timespent'], int):
+				supportIssues['timespent'] += issue['fields']['timespent']
+			pass
+
+		for subtask in issue['fields']['subtasks']:
+			# print(subtask['key'])
+			subtasks.index
+
+
+	
 
 
 if __name__ == "__main__":
 
-	sprint = 76
+	sprint = 77
 
 	stories = get_stories(sprint)
-	subtask = get_subtasks(sprint)
-	lookup = create_lookup(stories)
+	subtasks = get_subtasks(sprint)
+	data = format_data(stories, subtasks)
+	#lookup = create_lookup(stories)
 	
 
 

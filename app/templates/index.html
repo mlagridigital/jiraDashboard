@@ -2,27 +2,55 @@
 <html>
 <head>
 	<title>AgriDigital Sprint Dashboard</title>
+
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+
 </head>
 <body>
-	<h1>Welcome to the AgriDigital Jira Dashboard</h1>
-	
-	<table>
-		<tr>
-			<th>Row No.</th>
-			<th>Issue ID</th>
-			<th>Issue Key</th>
-			<th>Issue Type</th>
-			<th>Summary</th>
-		</tr>
-		{% for issue in data.issues %}
+
+	<div class="jumbotron">
+		<h1>Welcome to the AgriDigital Jira Dashboard</h1>
+	</div>
+	<div class="container-fluid">
+		<table class="table-hover">
 			<tr>
-				<td>{{ loop.index }}</td>
-				<td>{{ issue.id }}</td>
-				<td>{{ issue.key }}</td>
-				<td>{{ issue.fields.issuetype.name }}</td>
-				<td>{{ issue.fields.summary }}</td>
+				<th>Row No.</th>
+				<th>Issue ID</th>
+				<th>Issue Key</th>
+				<th>Issue Type</th>
+				<th>Summary</th>
+				<th>Number of subtasks</th>
 			</tr>
-		{% endfor %}
-	</table>
+			{% for issue in stories.issues %}
+				<tr style="background-color: rgb(242, 242, 242)">
+					<td>{{ loop.index }}</td>
+					<td>{{ issue.id }}</td>
+					<td>{{ issue.key }}</td>
+					<td>{{ issue.fields.issuetype.name }}</td>
+					<td>{{ issue.fields.summary }}</td>
+					<td>{{ issue.fields.subtasks|length }}</td>
+
+					{% if issue.fields.subtasks|length > 0 %}
+
+						{% for subtask in issue.fields.subtasks %}
+							
+							<tr>
+								<td></td>
+								<td>{{ subtask.id}}</td>
+								<td>{{ subtask.key }}</td>
+								<td>{{ subtask.fields.issuetype.name }}</td>
+								<td>{{ subtask.fields.summary }}</td>
+								<td></td>
+							</tr>
+
+						{% endfor %}
+
+					{% endif %}
+
+				</tr>
+			{% endfor %}
+		</table>
+	</div>
 </body>
 </html>

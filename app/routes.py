@@ -4,15 +4,23 @@ import requests, json
 
 @app.route('/')
 def index():
-	data = {'story' : 'hey we got a story'}
 
-	sprint = 76
+	sprint = 77
 	stories = get_stories(sprint)
-	
-	return render_template('index.html', data = stories)
+	subtasks = get_subtasks(sprint)
+
+	return render_template('index.html', stories = stories, subtasks = subtasks)
 
 
 
+
+
+
+
+
+
+
+#--------------------- REQUEST FUNCTIONS ---------------------#
 
 def get_stories(sprint):
 	"""
@@ -53,5 +61,36 @@ def get_stories(sprint):
 	print("Requesting stories in sprint:", sprint)
 	print("Recieved:", len(parsed['issues']), "/", parsed['total'] ,"stories")
 
+
+	return parsed
+
+def get_subtasks(sprint):
+	"""
+	TODO -  request does not capture all the results, limited by maxResults. only maxResults = 100.
+			Explore pagination of results, or perform multiple requests starting at n * maxResults
+	
+	"""
+	
+	url = 'https://fullprofile.atlassian.net/rest/api/2/search'
+
+	querystring = {
+		"jql" : "project = ADS AND sprint = " + str(sprint) + " AND type in subtaskIssueTypes()",
+		"maxResults" : "200",
+		"fields" : "status, issuetype"
+	}
+
+	headers = {
+	    'Authorization': "Basic dGltLnZhbi5lbGxlbWVldDpBZ3JpZGlnaXRhbDEhamlyYQ==",
+	    'Cache-Control': "no-cache",
+	    'Postman-Token': "9514aa40-4142-43df-bf5e-361c551463f2"
+	    }
+
+	response = requests.request("GET", url, headers=headers, params=querystring)
+
+	parsed = response.json()
+	#print(json.dumps(parsed, indent = 4))
+
+	print("Requesting subtasks in sprint:", sprint)
+	print("Recieved:", len(parsed['issues']), "/", parsed['total'] ,"subtasks")
 
 	return parsed
