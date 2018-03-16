@@ -5,6 +5,24 @@
 </head>
 <body>
 	<h1>Welcome to the AgriDigital Jira Dashboard</h1>
-	<p>Story: {{ data.story }} </p>
+	
+	<table>
+		<tr>
+			<th>Row No.</th>
+			<th>Issue ID</th>
+			<th>Issue Key</th>
+			<th>Issue Type</th>
+			<th>Summary</th>
+		</tr>
+		{% for issue in data.issues %}
+			<tr>
+				<td>{{ loop.index }}</td>
+				<td>{{ issue.id }}</td>
+				<td>{{ issue.key }}</td>
+				<td>{{ issue.fields.issuetype.name }}</td>
+				<td>{{ issue.fields.summary }}</td>
+			</tr>
+		{% endfor %}
+	</table>
 </body>
 </html>
