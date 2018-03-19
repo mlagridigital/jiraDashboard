@@ -105,6 +105,7 @@ def format_data(stories, subtasks):
 			check logs include comments; attention these look to have affected .csv
 	
 		- Add status to issues
+		- SELF URLS
 
 
 	# QUESTIONS 
