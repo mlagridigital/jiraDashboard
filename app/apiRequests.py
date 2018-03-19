@@ -106,6 +106,7 @@ def format_data(stories, subtasks):
 	
 		- Add status to issues
 		- SELF URLS
+		- Convert times to useful
 
 
 	# QUESTIONS 
@@ -114,6 +115,7 @@ def format_data(stories, subtasks):
 		- How should I treat bugs - as stories or supports
 		- Creating burn downs, should stories be associated to a dev team and the timespent aggregated? 
 		- How should I treat TECH-DEBT?
+		- How should I treat subtask - OPS, PERI, API
 	"""
 
 	storiesFormated = []
@@ -198,13 +200,13 @@ def format_data(stories, subtasks):
 					}
 
 					if newSubtask['summary'].upper().startswith(("BACK", "API", "PERI"), 1) :
-						newSubtask['devteam'] = "backend"
+						newSubtask['devteam'] = "Backend"
 					elif newSubtask['summary'].upper().startswith("FRONT", 1):
-						newSubtask['devteam'] = "frontend"
+						newSubtask['devteam'] = "Front End"
 					elif newSubtask['summary'].upper().startswith("TEST", 1):
-						newSubtask['devteam'] = "test"
+						newSubtask['devteam'] = "Test"
 					else:
-						print("Error: subtask", newSubtask['id'], "not set to team")
+						print("Error: subtask", newSubtask['key'], "not set to team")
 
 
 					# print(json.dumps(newSubtask, indent = 4))
