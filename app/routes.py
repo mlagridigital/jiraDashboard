@@ -17,8 +17,14 @@ def index():
 
 
 
+#--------------------- TEST ---------------------#
 
+"""
+	IDEAS
+		- webscrape search query to check numbers
+		
 
+"""
 
 #--------------------- REQUEST FUNCTIONS ---------------------#
 

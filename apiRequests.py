@@ -1,54 +1,9 @@
 import requests
 import json
 
-# def get_stories(sprint):
-# 	"""
-# 	TODO - get/request code is currently duplicated and can be reduced
-
-
-# 	"jql" : "project = ADS AND sprint = 'A-Team' AND sprint IN openSprints() AND sprint NOT IN futureSprints() AND type in standardIssueTypes()",
-
-# 	"""
-
-# 	url = 'https://fullprofile.atlassian.net/rest/api/2/search'
-# 				# '?jql=\
-# 				# project=ADS\
-# 				# +AND+sprint="A-Team"\
-# 				# +AND+sprint+IN+openSprints()\
-# 				# +AND+sprint+NOT+IN+futureSprints()\
-# 				# +AND+type+IN+standardIssueTypes()\
-# 				# '
-
-
-# 	querystring = {
-# 		"jql" : "project = ADS AND sprint = " + str(sprint) + " AND type in standardIssueTypes()",
-# 		"maxResults" : "100",
-# 		"fields" : "status, subtasks, issuetype, summary, timespent"
-# 	}
-
-# 	headers = {
-# 	    'Authorization': "Basic dGltLnZhbi5lbGxlbWVldDpBZ3JpZGlnaXRhbDEhamlyYQ==",
-# 	    'Cache-Control': "no-cache",
-# 	    'Postman-Token': "9514aa40-4142-43df-bf5e-361c551463f2"
-# 	    }
-
-# 	response = requests.request("GET", url, headers=headers, params=querystring)
-
-# 	parsed = response.json()
-# 	#print(json.dumps(parsed['issues'][0], indent = 4))
-	
-# 	print("Requesting jql query: ", querystring['jql'])
-# 	print("Filtering for fields: ", querystring['fields'])
-# 	print("Recieved:", len(parsed['issues']), "/", parsed['total'] ,"stories")
-
-
-# 	return parsed['issues']
-
-
 def get_issues(sprint, search = None):
 	"""
-	TODO -  request does not capture all the results, limited by maxResults. only maxResults = 100.
-			Explore pagination of results, or perform multiple requests starting at n * maxResults
+	TODO -  
 	
 	"""
 		
@@ -66,7 +21,7 @@ def get_issues(sprint, search = None):
 			"jql" : "project = ADS AND sprint = " + str(sprint) + " AND type in subtaskIssueTypes()",
 			"maxResults" : "100",
 			"startAt" : 0,
-			"fields" : "status, issuetype"
+			"fields" : "status, issuetype, summary, aggregatetimespent, aggregatetimeoriginalestimate, aggregatetimeestimate"
 		}
 	else:
 		print("Error: invalid search criteria, only search for stories or subtasks")
@@ -111,30 +66,30 @@ def get_issues(sprint, search = None):
 
 
 
-def create_lookup(parsed):
-	"""
-	Lookup that creates dict with key = issue_id and values = list of the issue's subtask_ids
-	"""
+# def create_lookup(parsed):
+# 	"""
+# 	Lookup that creates dict with key = issue_id and values = list of the issue's subtask_ids
+# 	"""
 
-	# print(parsed['total'])
-	# print(len(parsed['issues']))
+# 	# print(parsed['total'])
+# 	# print(len(parsed['issues']))
 
-	count = 0
-	subtask_keys = {}
-	for i, issue in enumerate(parsed['issues']):
-		# print('issue: ', i, ' has: ', len(issue['fields']['subtasks']), ' subtasks')
-		count += 1 + len(issue['fields']['subtasks'])
+# 	count = 0
+# 	subtask_keys = {}
+# 	for i, issue in enumerate(parsed['issues']):
+# 		# print('issue: ', i, ' has: ', len(issue['fields']['subtasks']), ' subtasks')
+# 		count += 1 + len(issue['fields']['subtasks'])
 
-		subtask_keys[issue['id']] = []
-		for subtask in issue['fields']['subtasks']:
-			subtask_keys[issue['id']].append(subtask['id'])
+# 		subtask_keys[issue['id']] = []
+# 		for subtask in issue['fields']['subtasks']:
+# 			subtask_keys[issue['id']].append(subtask['id'])
 
-	# 	print("Issue id: ", issue['id'], " with key: ", issue['key'])
-	# 	print("Has ", count, " subtasks: ", subtask_keys[issue['id']])
+# 	# 	print("Issue id: ", issue['id'], " with key: ", issue['key'])
+# 	# 	print("Has ", count, " subtasks: ", subtask_keys[issue['id']])
 	
-	print('Created lookup for issues: ', count)
-	#print(subtask_keys)
-	return(subtask_keys)
+# 	print('Created lookup for issues: ', count)
+# 	#print(subtask_keys)
+# 	return(subtask_keys)
 
 
 def format_data(stories, subtasks):
@@ -155,18 +110,10 @@ def format_data(stories, subtasks):
 	# QUESTIONS 
 		- Include Priorities?? 
 		- For Defects, Bugs and Subtasks include ROOT CAUSE
+		- How should I treat bugs - as stories or supports
+		- Creating burn downs, should stories be associated to a dev team and the timespent aggregated? 
+		- How should I treat TECH-DEBT?
 	"""
-
-	subtasksFormated = [{
-		"id" : int,
-		"key" : "",
-		"self" : "",
-		"issuetype" : "",
-		"issuetypeIcon" :"",
-		"timeestimate" : int,
-		"remainingEstimate" : int,
-		"timespent" : int,
-	}]
 
 	storiesFormated = []
 
@@ -177,6 +124,13 @@ def format_data(stories, subtasks):
 		"timespent" : 0,
 	}
 
+	# bugIssues = {
+	# 	"count" : 0,
+	# 	"timespent" : 0,
+	# }
+
+	print("_" * 50)
+	#print(json.dumps(subtasks, indent = 4))
 
 	for i, issue in enumerate(stories):
 		
@@ -194,6 +148,14 @@ def format_data(stories, subtasks):
 
 		# FILTER OUT 'TASKS'
 
+
+		#WHAT TO DO WITH BUGS -- TREAT AS STORY OR SUPPORT
+		# if issue['fields']['issuetype']['name'] == "Bug":
+		# 	bugIssues['count'] += 1
+		# 	if isinstance(issue['fields']['aggregatetimespent'], int):
+		# 		bugIssues['timespent'] += issue['fields']['aggregatetimespent']
+		# 	continue
+
 		# WHAT TO DO WITH TECH-DEBT?
 
 		# FORMAT self to url
@@ -201,7 +163,9 @@ def format_data(stories, subtasks):
 		newStory = {
 			"id" : issue['id'],
 			"key" : issue['key'],
+			"summary" : issue['fields']['summary'],
 			"self" : "",
+			"status" : issue['fields']['status']['name'],
 			"issuetype" : issue['fields']['issuetype']['name'],
 			"issuetypeIcon" :"",
 			"aggregatetimespent" : issue['fields']['aggregatetimespent'],
@@ -210,36 +174,80 @@ def format_data(stories, subtasks):
 			"subtasks" : []
 		}
 
-		storiesFormated.append(newStory)
 
 		for subtask in issue['fields']['subtasks']:
 			print("	Has subtasks:",subtask['key'])
-			subtasks.index
 
-	print(supportIssues)
-	print(json.dumps(storiesFormated, indent = 4))
+			for s in subtasks:
+				if s['id'] == subtask['id']:
+					print("	subtask match", s['id'], subtask['id'])
+
+					newSubtask = {
+						"id" : s['id'],
+						"key" : s['key'],
+						"summary" : s['fields']['summary'],
+						"self" : "",
+						"status" : s['fields']['status']['name'],
+						"devteam" : "",
+						"issuetype" : s['fields']['issuetype']['name'],
+						"issuetypeIcon" :"",
+						"aggregatetimespent" : s['fields']['aggregatetimespent'],
+						"aggregatetimeoriginalestimate" : s['fields']['aggregatetimeoriginalestimate'],
+						"aggregatetimeestimate" : s['fields']['aggregatetimeestimate'],
+					}
+
+					if newSubtask['summary'].upper().startswith(("BACK", "API", "PERI"), 1) :
+						newSubtask['devteam'] = "backend"
+					elif newSubtask['summary'].upper().startswith("FRONT", 1):
+						newSubtask['devteam'] = "frontend"
+					elif newSubtask['summary'].upper().startswith("TEST", 1):
+						newSubtask['devteam'] = "test"
+					else:
+						print("Error: subtask", newSubtask['id'], "not set to team")
 
 
-	print("_" * 50)
-	print(json.dumps(subtasks, indent = 4))
+					# print(json.dumps(newSubtask, indent = 4))
+					newStory['subtasks'].append(newSubtask)
+
+			
+		storiesFormated.append(newStory)
+		# print(json.dumps(newStory, indent = 4))
+
+
+
+	data = {
+		"stories" : storiesFormated,
+		"supoort" : supportIssues
+	}
+
+	return data
+
+	# print(supportIssues)
+	# print(json.dumps(storiesFormated, indent = 4))
+
+
+	# print("_" * 50)
+	# print(json.dumps(subtasks, indent = 4))
 
 
 
 
-	
+def start(sprint):
+	stories = get_issues(sprint, search = "stories")
+	subtasks = get_issues(sprint, search = "subtasks")
+	data = format_data(stories, subtasks)
+
+	return data
 
 
 if __name__ == "__main__":
 
 	sprint = 77
 
-	#stories = get_stories(sprint)
-	#subtasks = get_subtasks(sprint)
-
 	stories = get_issues(sprint, search = "stories")
 	subtasks = get_issues(sprint, search = "subtasks")
 	data = format_data(stories, subtasks)
-	#lookup = create_lookup(stories)
+
 	
 
 
