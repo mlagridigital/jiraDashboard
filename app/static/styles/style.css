@@ -1,8 +1,53 @@
+.container-fluid {
+	position: absolute;
+	left: 5%;
+	width: 90%;
+}
+
+table {
+	border-collapse: collapse;
+	border-radius: 4px;
+	background-color: white;
+	border: solid 1px #ebedf0;
+	box-shadow: 0px 1px 0 0 #ebedf0;
+
+}
+
+td, th {
+	padding: 0.5rem;
+	text-align: left;
+	vertical-align: middle;
+	white-space: pre;
+	border: solid 1px #ebedf0;
+	box-shadow: 0px 1px 0 0 #ebedf0;
+
+	font-family: Avenir-Roman;
+	font-size: 14px;
+	color: #454a54;
+}
+
+th {
+	font-weight: 900;
+	background-color: rgba(235, 237, 240, 0.8)
+}
+
+tbody tr:hover {
+	background-color: rgba(81, 138, 200, 0.1);
+}
+
 tr.row_story {
-    cursor : pointer;
-    background-color: rgb(242, 242, 242);
+	background-color: rgba(235, 237, 240, 0.4);
+    cursor: pointer;
 }
 
 tr.row_subtask {
 	display: none;
+}
+
+td.cell_summary {
+	white-space: normal;
+}
+
+td.cell_time {
+	text-align: right;
 }

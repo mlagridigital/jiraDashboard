@@ -8,58 +8,67 @@
 	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles/style.css') }}">
 
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 
 </head>
 <body>
 
 	<div class="jumbotron">
-		<h1>Welcome to the AgriDigital Jira Dashboard</h1>
+		<h1>AgriDigital Sprint Dashboard</h1>
 	</div>
 	<div class="container-fluid">
-		<table class="table-hover">
-			<tr>
-				<th>Issue Type</th>
-				<th>Issue Key</th>
-				<th>Summary</th>
-				<th>Number of subtasks</th>
-				<th>Status</th>
-				<th>Original Estimate</th>
-				<th>Time Spent</th>
-				<th>Remaining Time</th>
-			</tr>
-			{% for issue in stories %}
-				<tr class="row_story">
-
-					<td>{{ issue.issuetype }}</td>
-					<td>{{ issue.key }}</td>
-					<td>{{ issue.summary }}</td>
-					<td>{{ issue.subtasks|length }}</td>
-					<td>{{ issue.status }}</td>
-					<td>{{ issue.aggregatetimeoriginalestimate }}</td>
-					<td>{{ issue.aggregatetimespent }}</td>
-					<td>{{ issue.aggregatetimeestimate }}</td>
-
-					{% if issue.subtasks|length > 0 %}
-
-						{% for subtask in issue.subtasks %}
-							
-							<tr class="row_subtask">
-								<td>{{ subtask.issuetype }}</td>
-								<td>{{ subtask.key }}</td>
-								<td>{{ subtask.summary }}</td>
-								<td>{{ subtask.devteam }}</td>
-								<td>{{ subtask.status }}</td>
-								<td>{{ subtask.aggregatetimeoriginalestimate }}</td>
-								<td>{{ subtask.aggregatetimespent }}</td>
-								<td>{{ subtask.aggregatetimeestimate }}</td>
-							</tr>
-
-						{% endfor %}
-
-					{% endif %}
-
+		<table class="table">
+			<thead>
+				<tr>
+					<th>Issue Key</th>
+					<th>Issue Type   </th>
+					<th>Summary</th>
+					<th>Subtask   </th>
+					<th>Status               </th>
+					<th>Original Estimate</th>
+					<th>Time Spent</th>
+					<th>Remaining Time</th>
+					<th>Progress</th>
 				</tr>
-			{% endfor %}
+			</thead>
+			<tbody>
+				{% for issue in stories %}
+					<tr class="row_story">
+
+						<td>{{ issue.key }}</td>
+						<td>{{ issue.issuetype }}</td>
+						<td class="cell_summary">{{ issue.summary }}</td>
+						<td>{{ issue.subtasks|length }}</td>
+						<td>{{ issue.status }}</td>
+						<td class="cell_time">{{ issue.aggregatetimeoriginalestimate }}</td>
+						<td class="cell_time">{{ issue.aggregatetimespent }}</td>
+						<td class="cell_time">{{ issue.aggregatetimeestimate }}</td>
+						<td class="cell_progress"></td>
+
+						{% if issue.subtasks|length > 0 %}
+
+							{% for subtask in issue.subtasks %}
+								
+								<tr class="row_subtask">
+									
+									<td>{{ subtask.key }}</td>
+									<td>{{ subtask.issuetype }}</td>
+									<td class="cell_summary">{{ subtask.summary }}</td>
+									<td>{{ subtask.devteam }}</td>
+									<td>{{ subtask.status }}</td>
+									<td class="cell_time">{{ subtask.aggregatetimeoriginalestimate }}</td>
+									<td class="cell_time">{{ subtask.aggregatetimespent }}</td>
+									<td class="cell_time">{{ subtask.aggregatetimeestimate }}</td>
+									<td class="cell_progress"></td>
+								</tr>
+
+							{% endfor %}
+
+						{% endif %}
+
+					</tr>
+				{% endfor %}
+			</tbody>
 		</table>
 	</div>
 </body>
@@ -69,6 +78,11 @@
 	$('.row_story').click(function(){
 		$(this).nextUntil('tr.row_story').slideToggle(200);
 	});
+
+	$('td.cell_progress').progressbar({
+		value: 20
+	});
+	
 
 </script>
 
