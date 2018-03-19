@@ -4,7 +4,10 @@
 	<title>AgriDigital Sprint Dashboard</title>
 
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+	
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles/style.css') }}">
 
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
 </head>
 <body>
@@ -15,33 +18,40 @@
 	<div class="container-fluid">
 		<table class="table-hover">
 			<tr>
-				<th>Row No.</th>
-				<th>Issue ID</th>
-				<th>Issue Key</th>
 				<th>Issue Type</th>
+				<th>Issue Key</th>
 				<th>Summary</th>
 				<th>Number of subtasks</th>
+				<th>Status</th>
+				<th>Original Estimate</th>
+				<th>Time Spent</th>
+				<th>Remaining Time</th>
 			</tr>
-			{% for issue in stories.issues %}
-				<tr style="background-color: rgb(242, 242, 242)">
-					<td>{{ loop.index }}</td>
-					<td>{{ issue.id }}</td>
+			{% for issue in stories %}
+				<tr class="row_story">
+
+					<td>{{ issue.issuetype }}</td>
 					<td>{{ issue.key }}</td>
-					<td>{{ issue.fields.issuetype.name }}</td>
-					<td>{{ issue.fields.summary }}</td>
-					<td>{{ issue.fields.subtasks|length }}</td>
+					<td>{{ issue.summary }}</td>
+					<td>{{ issue.subtasks|length }}</td>
+					<td>{{ issue.status }}</td>
+					<td>{{ issue.aggregatetimeoriginalestimate }}</td>
+					<td>{{ issue.aggregatetimespent }}</td>
+					<td>{{ issue.aggregatetimeestimate }}</td>
 
-					{% if issue.fields.subtasks|length > 0 %}
+					{% if issue.subtasks|length > 0 %}
 
-						{% for subtask in issue.fields.subtasks %}
+						{% for subtask in issue.subtasks %}
 							
-							<tr>
-								<td></td>
-								<td>{{ subtask.id}}</td>
+							<tr class="row_subtask">
+								<td>{{ subtask.issuetype }}</td>
 								<td>{{ subtask.key }}</td>
-								<td>{{ subtask.fields.issuetype.name }}</td>
-								<td>{{ subtask.fields.summary }}</td>
-								<td></td>
+								<td>{{ subtask.summary }}</td>
+								<td>{{ subtask.devteam }}</td>
+								<td>{{ subtask.status }}</td>
+								<td>{{ subtask.aggregatetimeoriginalestimate }}</td>
+								<td>{{ subtask.aggregatetimespent }}</td>
+								<td>{{ subtask.aggregatetimeestimate }}</td>
 							</tr>
 
 						{% endfor %}
@@ -53,4 +63,14 @@
 		</table>
 	</div>
 </body>
+
+<script type="text/javascript">
+	
+	$('.row_story').click(function(){
+		$(this).nextUntil('tr.row_story').slideToggle(200);
+	});
+
+</script>
+
+
 </html>

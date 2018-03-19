@@ -1,0 +1,8 @@
+tr.row_story {
+    cursor : pointer;
+    background-color: rgb(242, 242, 242);
+}
+
+tr.row_subtask {
+	display: none;
+}
