@@ -22,7 +22,7 @@
 			<thead>
 				<tr>
 					<th>Issue Key</th>
-					<th>Issue Type   </th>
+					<th>Issue Type      </th>
 					<th>Summary</th>
 					<th>Subtask   </th>
 					<th>Status               </th>
@@ -42,7 +42,7 @@
 					<tr class="row_story">
 
 						<td><a href="{{ issue.self }}">{{ issue.key }}</a></td>
-						<td>{{ issue.issuetype }}</td>
+						<td><img src="{{ issue.issuetypeIcon }}" height="15" width="15"> {{ issue.issuetype }}</td>
 						<td class="cell_summary">{{ issue.summary }}</td>
 						<td style="text-align: center;">{{ issue.subtasks|length }}</td>
 						<td>{{ issue.status }}</td>
@@ -66,7 +66,7 @@
 								<tr class="row_subtask">
 									
 									<td><a href="{{ subtask.self }}">{{ subtask.key }}</td></a>
-									<td>{{ subtask.issuetype }}</td>
+									<td><img src="{{ subtask.issuetypeIcon }}" height="15" width="15"> {{ subtask.issuetype }}</td>
 									<td class="cell_summary">{{ subtask.summary }}</td>
 									<td>{{ subtask.devteam }}</td>
 									<td>{{ subtask.status }}</td>
