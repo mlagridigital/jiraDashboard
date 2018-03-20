@@ -6,7 +6,7 @@ from . import apiRequests
 @app.route('/')
 def index():
 
-	sprint = 78
+	sprint = 76
 
 	data = apiRequests.start(sprint)
 	return render_template('index.html', stories = data['stories'])

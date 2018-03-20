@@ -65,33 +65,6 @@ def get_issues(sprint, search = None):
 	return parsed['issues']
 
 
-
-# def create_lookup(parsed):
-# 	"""
-# 	Lookup that creates dict with key = issue_id and values = list of the issue's subtask_ids
-# 	"""
-
-# 	# print(parsed['total'])
-# 	# print(len(parsed['issues']))
-
-# 	count = 0
-# 	subtask_keys = {}
-# 	for i, issue in enumerate(parsed['issues']):
-# 		# print('issue: ', i, ' has: ', len(issue['fields']['subtasks']), ' subtasks')
-# 		count += 1 + len(issue['fields']['subtasks'])
-
-# 		subtask_keys[issue['id']] = []
-# 		for subtask in issue['fields']['subtasks']:
-# 			subtask_keys[issue['id']].append(subtask['id'])
-
-# 	# 	print("Issue id: ", issue['id'], " with key: ", issue['key'])
-# 	# 	print("Has ", count, " subtasks: ", subtask_keys[issue['id']])
-	
-# 	print('Created lookup for issues: ', count)
-# 	#print(subtask_keys)
-# 	return(subtask_keys)
-
-
 def format_data(stories, subtasks):
 	"""
 	# FOR BURNDOWN - datetime is to show timespent on task over time
@@ -174,16 +147,27 @@ def format_data(stories, subtasks):
 			"aggregatetimespent" : issue['fields']['aggregatetimespent'],
 			"aggregatetimeoriginalestimate" : issue['fields']['aggregatetimeoriginalestimate'],
 			"aggregatetimeestimate" : issue['fields']['aggregatetimeestimate'],
-			"subtasks" : []
+			"aggregatetimespent_str" : str_time(issue['fields']['aggregatetimespent']),
+			"aggregatetimeoriginalestimate_str" : str_time(issue['fields']['aggregatetimeoriginalestimate']),
+			"aggregatetimeestimate_str" : str_time(issue['fields']['aggregatetimeestimate']),
+			"progress" : calc_progress(issue['fields']['aggregatetimeoriginalestimate'], issue['fields']['aggregatetimeestimate']),
+			"subtasks" : [],
+			"subtask_status_count" : {
+				"Dev In Progress" : 0,
+				"To Do" : 0,
+				"Done" : 0,
+				"Dev Review" : 0,
+				"Awaiting UAT" : 0,
+			},
 		}
 
 
 		for subtask in issue['fields']['subtasks']:
-			print("	Has subtasks:",subtask['key'])
+			#print("	Has subtasks:",subtask['key'])
 
 			for s in subtasks:
 				if s['id'] == subtask['id']:
-					print("	subtask match", s['id'], subtask['id'])
+					#print("	subtask match", s['id'], subtask['id'])
 
 					newSubtask = {
 						"id" : s['id'],
@@ -197,6 +181,10 @@ def format_data(stories, subtasks):
 						"aggregatetimespent" : s['fields']['aggregatetimespent'],
 						"aggregatetimeoriginalestimate" : s['fields']['aggregatetimeoriginalestimate'],
 						"aggregatetimeestimate" : s['fields']['aggregatetimeestimate'],
+						"aggregatetimespent_str" : str_time(s['fields']['aggregatetimespent']),
+						"aggregatetimeoriginalestimate_str" : str_time(s['fields']['aggregatetimeoriginalestimate']),
+						"aggregatetimeestimate_str" : str_time(s['fields']['aggregatetimeestimate']),
+						"progress" : calc_progress(s['fields']['aggregatetimeoriginalestimate'], s['fields']['aggregatetimeestimate'])
 					}
 
 					if newSubtask['summary'].upper().startswith(("BACK", "API", "PERI"), 1) :
@@ -212,10 +200,13 @@ def format_data(stories, subtasks):
 					# print(json.dumps(newSubtask, indent = 4))
 					newStory['subtasks'].append(newSubtask)
 
+					s_status = s['fields']['status']['name']
+					newStory['subtask_status_count'][s_status] += 1
+
+
 			
 		storiesFormated.append(newStory)
-		# print(json.dumps(newStory, indent = 4))
-
+		#print(json.dumps(newStory, indent = 4))
 
 
 	data = {
@@ -233,6 +224,43 @@ def format_data(stories, subtasks):
 	# print(json.dumps(subtasks, indent = 4))
 
 
+def str_time(time):
+	"""
+	Given a time in seconds. Return a string "Ww Dd Hh Mm". Where W/D/H/M are the number of weeks, days, hours, minutes in time.
+	"""
+
+	if not isinstance(time, int):
+		print("Error time is not int, time is:", time)
+		return time
+
+	days_per_week = 5
+	hours_per_day = 8
+
+	weeks = time // (days_per_week * hours_per_day * 60 * 60)
+	days = (time // (hours_per_day * 60 * 60)) % days_per_week
+	hours = (time // (60 * 60)) % hours_per_day
+	minutes = (time // 60) % 60
+
+	units = ['w', 'd', 'h', 'm']
+	values = [weeks, days, hours, minutes]
+
+	lst = [str(x) + units[i] for i, x in enumerate(values) if x > 0]
+
+	return " ".join(lst)
+
+
+def calc_progress(original_estimate, remaining_time):
+
+	if isinstance(original_estimate, int):
+		if isinstance(remaining_time, int):
+
+			progess = round(((original_estimate - remaining_time) / original_estimate) * 100)
+			print("Progres:", progess)
+			return progess
+
+	else:
+		print("Error calculating progress as time not int, time: [OE:", original_estimate, ", RE:", remaining_time, "]")
+		return None
 
 
 def start(sprint):
@@ -241,6 +269,7 @@ def start(sprint):
 	data = format_data(stories, subtasks)
 
 	return data
+
 
 
 if __name__ == "__main__":

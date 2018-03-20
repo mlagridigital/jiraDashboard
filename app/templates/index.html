@@ -17,7 +17,7 @@
 		<h1>AgriDigital Sprint Dashboard</h1>
 	</div>
 	<div class="container-fluid">
-		<table class="table">
+		<table class="table table-condensed">
 			<thead>
 				<tr>
 					<th>Issue Key</th>
@@ -29,6 +29,11 @@
 					<th>Time Spent</th>
 					<th>Remaining Time</th>
 					<th>Progress</th>
+					<th>Dev In Progress</th>
+					<th>To Do</th>
+					<th>Done</th>
+					<th>Dev Review</th>
+					<th>Awaiting UAT</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -40,15 +45,23 @@
 						<td class="cell_summary">{{ issue.summary }}</td>
 						<td>{{ issue.subtasks|length }}</td>
 						<td>{{ issue.status }}</td>
-						<td class="cell_time">{{ issue.aggregatetimeoriginalestimate }}</td>
-						<td class="cell_time">{{ issue.aggregatetimespent }}</td>
-						<td class="cell_time">{{ issue.aggregatetimeestimate }}</td>
-						<td class="cell_progress"></td>
+						<td class="cell_time">{% if issue.aggregatetimeoriginalestimate != None %}{{ issue.aggregatetimeoriginalestimate_str }}{% endif %}</td>
+						<td class="cell_time">{% if issue.aggregatetimespent != None %}{{ issue.aggregatetimespent_str }}{% endif %}</td>
+						<td class="cell_time">{% if issue.aggregatetimeestimate != None %}{{ issue.aggregatetimeestimate_str }}{% endif %}</td>
+						
+						<td class="cell_progress"><span class="progress_percentage">{{ issue.progress }}%</span><span class="progress" style="height: 10px"><div class="progress-bar" role="progressbar" style="height: 10px; width: {{ issue.progress }}%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div></span></td>
+
+						<td class="cell_status_count">{{ issue.subtask_status_count['Dev In Progress'] }}</td>
+						<td class="cell_status_count">{{ issue.subtask_status_count['To Do'] }}</td>
+						<td class="cell_status_count">{{ issue.subtask_status_count['Done'] }}</td>
+						<td class="cell_status_count">{{ issue.subtask_status_count['Dev Review'] }}</td>
+						<td class="cell_status_count">{{ issue.subtask_status_count['Awaiting UAT'] }}</td>
+
 
 						{% if issue.subtasks|length > 0 %}
 
 							{% for subtask in issue.subtasks %}
-								
+
 								<tr class="row_subtask">
 									
 									<td>{{ subtask.key }}</td>
@@ -56,10 +69,15 @@
 									<td class="cell_summary">{{ subtask.summary }}</td>
 									<td>{{ subtask.devteam }}</td>
 									<td>{{ subtask.status }}</td>
-									<td class="cell_time">{{ subtask.aggregatetimeoriginalestimate }}</td>
-									<td class="cell_time">{{ subtask.aggregatetimespent }}</td>
-									<td class="cell_time">{{ subtask.aggregatetimeestimate }}</td>
+									<td class="cell_time">{% if subtask.aggregatetimeoriginalestimate != None %}{{ subtask.aggregatetimeoriginalestimate_str }}{% endif %}</td>
+									<td class="cell_time">{% if subtask.aggregatetimespent != None %}{{ subtask.aggregatetimespent_str }}{% endif %}</td>
+									<td class="cell_time">{% if subtask.aggregatetimeestimate != None %}{{ subtask.aggregatetimeestimate_str }}{% endif %}</td>
 									<td class="cell_progress"></td>
+									<td></td>
+									<td></td>
+									<td></td>
+									<td></td>
+									<td></td>
 								</tr>
 
 							{% endfor %}
@@ -77,10 +95,6 @@
 	
 	$('.row_story').click(function(){
 		$(this).nextUntil('tr.row_story').slideToggle(200);
-	});
-
-	$('td.cell_progress').progressbar({
-		value: 20
 	});
 	
 

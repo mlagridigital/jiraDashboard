@@ -14,16 +14,22 @@ table {
 }
 
 td, th {
-	padding: 0.5rem;
+	white-space: pre;
+
+
 	text-align: left;
 	vertical-align: middle;
-	white-space: pre;
 	border: solid 1px #ebedf0;
 	box-shadow: 0px 1px 0 0 #ebedf0;
 
 	font-family: Avenir-Roman;
 	font-size: 14px;
 	color: #454a54;
+}
+
+.table td, .table th{
+	padding-left: 0.4rem;
+	padding-right: 0.4rem;
 }
 
 th {
@@ -50,4 +56,20 @@ td.cell_summary {
 
 td.cell_time {
 	text-align: right;
+}
+
+td.cell_status_count {
+	text-align: center;
+}
+
+td.cell_progress {
+}
+
+.progress {
+	min-width: 400px;
+}
+
+.progess_percentage {
+	vertical-align: middle;
+	text-align: : center;
 }
