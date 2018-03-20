@@ -8,6 +8,7 @@
 	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles/style.css') }}">
 
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 
 </head>
@@ -40,22 +41,22 @@
 				{% for issue in stories %}
 					<tr class="row_story">
 
-						<td>{{ issue.key }}</td>
+						<td><a href="{{ issue.self }}">{{ issue.key }}</a></td>
 						<td>{{ issue.issuetype }}</td>
 						<td class="cell_summary">{{ issue.summary }}</td>
-						<td>{{ issue.subtasks|length }}</td>
+						<td style="text-align: center;">{{ issue.subtasks|length }}</td>
 						<td>{{ issue.status }}</td>
 						<td class="cell_time">{% if issue.aggregatetimeoriginalestimate != None %}{{ issue.aggregatetimeoriginalestimate_str }}{% endif %}</td>
 						<td class="cell_time">{% if issue.aggregatetimespent != None %}{{ issue.aggregatetimespent_str }}{% endif %}</td>
 						<td class="cell_time">{% if issue.aggregatetimeestimate != None %}{{ issue.aggregatetimeestimate_str }}{% endif %}</td>
 						
-						<td class="cell_progress"><span class="progress_percentage">{{ issue.progress }}%</span><span class="progress" style="height: 10px"><div class="progress-bar" role="progressbar" style="height: 10px; width: {{ issue.progress }}%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div></span></td>
+						<td class="cell_progress"><span class="progress_percentage">{{ issue.progress }}%</span><span class="progress" style="height: 10px; width: {{ issue.progress }}%"><div class="progress-bar" style="height: 10px; width: {{ issue.progress }}%"></div></span></td>
 
-						<td class="cell_status_count">{{ issue.subtask_status_count['Dev In Progress'] }}</td>
-						<td class="cell_status_count">{{ issue.subtask_status_count['To Do'] }}</td>
-						<td class="cell_status_count">{{ issue.subtask_status_count['Done'] }}</td>
-						<td class="cell_status_count">{{ issue.subtask_status_count['Dev Review'] }}</td>
-						<td class="cell_status_count">{{ issue.subtask_status_count['Awaiting UAT'] }}</td>
+						<td class="cell_status_count">{% if issue.subtask_status_count['Dev In Progress'] > 0 %}{{ issue.subtask_status_count['Dev In Progress'] }}{% endif %}</td>
+						<td class="cell_status_count">{% if issue.subtask_status_count['To Do'] > 0 %}{{ issue.subtask_status_count['To Do'] }}{% endif %}</td>
+						<td class="cell_status_count">{% if issue.subtask_status_count['Done'] > 0 %}{{ issue.subtask_status_count['Done'] }}{% endif %}</td>
+						<td class="cell_status_count">{% if issue.subtask_status_count['Dev Review'] > 0 %}{{ issue.subtask_status_count['Dev Review'] }}{% endif %}</td>
+						<td class="cell_status_count">{% if issue.subtask_status_count['Awaiting UAT'] > 0 %}{{ issue.subtask_status_count['Awaiting UAT'] }}{% endif %}</td>
 
 
 						{% if issue.subtasks|length > 0 %}
@@ -64,7 +65,7 @@
 
 								<tr class="row_subtask">
 									
-									<td>{{ subtask.key }}</td>
+									<td><a href="{{ subtask.self }}">{{ subtask.key }}</td></a>
 									<td>{{ subtask.issuetype }}</td>
 									<td class="cell_summary">{{ subtask.summary }}</td>
 									<td>{{ subtask.devteam }}</td>
@@ -73,11 +74,11 @@
 									<td class="cell_time">{% if subtask.aggregatetimespent != None %}{{ subtask.aggregatetimespent_str }}{% endif %}</td>
 									<td class="cell_time">{% if subtask.aggregatetimeestimate != None %}{{ subtask.aggregatetimeestimate_str }}{% endif %}</td>
 									<td class="cell_progress"></td>
-									<td></td>
-									<td></td>
-									<td></td>
-									<td></td>
-									<td></td>
+									<td class="cell_status_count">{% if subtask.status == 'Dev In Progress' %}*{% endif %}</td>
+									<td class="cell_status_count">{% if subtask.status == 'To Do' %}*{% endif %}</td>
+									<td class="cell_status_count">{% if subtask.status == 'Done' %}*{% endif %}</td>
+									<td class="cell_status_count">{% if subtask.status == 'Dev Review' %}*{% endif %}</td>
+									<td class="cell_status_count">{% if subtask.status == 'Awaiting UAT' %}*{% endif %}</td>
 								</tr>
 
 							{% endfor %}
