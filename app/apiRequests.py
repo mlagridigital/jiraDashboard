@@ -85,6 +85,8 @@ def format_data(stories, subtasks):
 		- Creating burn downs, should stories be associated to a dev team and the timespent aggregated? 
 		- How should I treat TECH-DEBT?
 		- How should I treat subtask - OPS, PERI, API
+		- Issue status - include Reopened?
+		- Check for other issue statuses
 	"""
 
 	storiesFormated = []

@@ -33,7 +33,7 @@
 				<tr>
 					<th>Issue Key</th>
 					<th>Issue Type      </th>
-					<th>Summary</th>
+					<th class="cell_summary">Summary</th>
 					<th>Subtask   </th>
 					<th>Status               </th>
 					<th>Assignee      </th>
@@ -63,9 +63,7 @@
 						<td class="cell_time">{% if issue.aggregatetimespent != None %}{{ issue.aggregatetimespent_str }}{% endif %}</td>
 						<td class="cell_time">{% if issue.aggregatetimeestimate != None %}{{ issue.aggregatetimeestimate_str }}{% endif %}</td>
 						<td class="cell_progress_percentage">{% if issue.progress != None %}{{ issue.progress }}%{% endif %}</td>
-						<td class="cell_progress"><div class="progress" style="height: 10px; width: {{ issue.progress }}%"><div class="progress-bar" style="height: 10px; width: {{ issue.progress }}%"></div></div></td>
-
-						
+						<td class="cell_progress"><div class="progress" style="height: 10px; width: 100%"><div class="progress-bar" style="height: 10px; width: {{ issue.progress }}%"></div></div></td>						
 						<td class="cell_status_count">{% if issue.subtask_status_count['To Do'] > 0 %}{{ issue.subtask_status_count['To Do'] }}{% endif %}</td>
 						<td class="cell_status_count">{% if issue.subtask_status_count['Dev In Progress'] > 0 %}{{ issue.subtask_status_count['Dev In Progress'] }}{% endif %}</td>
 						<td class="cell_status_count">{% if issue.subtask_status_count['Dev Review'] > 0 %}{{ issue.subtask_status_count['Dev Review'] }}{% endif %}</td>

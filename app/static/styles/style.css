@@ -72,10 +72,28 @@ td.cell_progress {
 }
 
 .progress {
-	min-width: 400px;
+	min-width: 80px;
+}
+
+@media only screen and (min-width: 1920px) {
+	.progress {
+		min-width: 150px;
+	}
+}
+
+th.cell_summary, td.cell_summary {
+	display: none;
+}
+
+@media only screen and (min-width: 1920px){
+	th.cell_summary, td.cell_summary {
+		display: table-cell;
+	}
 }
 
 .progess_percentage {
 	vertical-align: middle;
 	text-align: : center;
 }
+
+
