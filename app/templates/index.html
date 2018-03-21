@@ -16,12 +16,14 @@
 
 	<div class="jumbotron">
 		<h1>AgriDigital Sprint Dashboard</h1>
+		<h3>{{ stories[0]['sprints'][0]['name'] }}</h3>
 		<div id="sprint_input_group" class="input-group">
 			<div class="input-group-prepend">
 				<span class="input-group-text">Sprint No:</span>
 			</div>
 			<input id="sprint_input" type="text" class="form-control" placeholder="">
 		</div>
+		
 		
 		
 	</div>
@@ -66,7 +68,6 @@
 						<td class="cell_status_count">{% if issue.subtask_status_count['Done'] > 0 %}{{ issue.subtask_status_count['Done'] }}{% endif %}</td>
 						<td class="cell_status_count">{% if issue.subtask_status_count['Dev Review'] > 0 %}{{ issue.subtask_status_count['Dev Review'] }}{% endif %}</td>
 						<td class="cell_status_count">{% if issue.subtask_status_count['Awaiting UAT'] > 0 %}{{ issue.subtask_status_count['Awaiting UAT'] }}{% endif %}</td>
-
 
 						{% if issue.subtasks|length > 0 %}
 

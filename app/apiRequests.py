@@ -14,14 +14,14 @@ def get_issues(sprint, search = None):
 			"jql" : "project = ADS AND sprint = " + str(sprint) + " AND type in standardIssueTypes()",
 			"maxResults" : "100",
 			"startAt" : 0,
-			"fields" : "status, subtasks, issuetype, summary, aggregatetimespent, aggregatetimeoriginalestimate, aggregatetimeestimate"
+			"fields" : "status, subtasks, issuetype, summary, aggregatetimespent, aggregatetimeoriginalestimate, aggregatetimeestimate, customfield_10016"
 		}
 	elif search == "subtasks":
 		querystring = {
 			"jql" : "project = ADS AND sprint = " + str(sprint) + " AND type in subtaskIssueTypes()",
 			"maxResults" : "100",
 			"startAt" : 0,
-			"fields" : "status, issuetype, summary, aggregatetimespent, aggregatetimeoriginalestimate, aggregatetimeestimate"
+			"fields" : "status, issuetype, summary, aggregatetimespent, aggregatetimeoriginalestimate, aggregatetimeestimate, customfield_10016"
 		}
 	else:
 		print("Error: invalid search criteria, only search for stories or subtasks")
@@ -110,7 +110,6 @@ def format_data(stories, subtasks):
 		print("Issue Key:", issue['key'])
 		print("Issue type name:", issue['fields']['issuetype']['name'])
 
-
 		# Filter out support tasks
 		if issue['fields']['issuetype']['name'] == "Support ":
 			supportIssues['count'] += 1
@@ -155,8 +154,10 @@ def format_data(stories, subtasks):
 				"Dev Review" : 0,
 				"Awaiting UAT" : 0,
 			},
+			"sprints" : format_sprints(issue['fields']['customfield_10016']),
 		}
 
+		#print(format_sprints(issue['fields']['customfield_10016']))
 
 		for subtask in issue['fields']['subtasks']:
 			#print("  Has subtasks:",subtask['key'])
@@ -261,6 +262,36 @@ def calc_progress(original_estimate, remaining_time):
 	else:
 		print("Error calculating progress as time not int, time: [OE:", original_estimate, ", RE:", remaining_time, "]")
 		return None
+
+def format_sprints(sprints):
+
+	#current = True
+
+	# sprints are stacked on the end of the list, last member of the
+	sprintsFormatted = []
+
+	for i, s in enumerate(reversed(sprints)):
+
+
+
+		temp = {}
+
+		for i in s.split('[')[1].split(','):
+			key = i.split('=')[0]
+			value = i.split('=')[1]
+			temp[key] = value
+		
+		sprintsFormatted.append({
+			"current" : "",
+			"id" : temp['id'],
+			"state" : temp['state'],
+			"name" : temp['name'],
+			"startDate" : temp['startDate'],
+			"endDate" : temp['endDate'],
+			"completeDate" : temp['completeDate']
+			})
+
+	return sprintsFormatted
 
 
 def start(sprint):
