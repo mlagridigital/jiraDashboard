@@ -21,7 +21,7 @@
 			<div class="input-group-prepend">
 				<span class="input-group-text">Sprint No:</span>
 			</div>
-			<input id="sprint_input" type="text" class="form-control" placeholder="">
+			<input id="sprint_input" type="text" class="form-control" value="">
 		</div>
 		
 		
@@ -36,16 +36,17 @@
 					<th>Summary</th>
 					<th>Subtask   </th>
 					<th>Status               </th>
+					<th>Assignee      </th>
 					<th>Original Estimate</th>
 					<th>Time Spent</th>
 					<th>Remaining Time</th>
 					<th>Progress</th>
 					<th></th>
-					<th>Dev In Progress</th>
 					<th>To Do</th>
-					<th>Done</th>
+					<th>Dev In Progress</th>
 					<th>Dev Review</th>
 					<th>Awaiting UAT</th>
+					<th>Done</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -57,17 +58,19 @@
 						<td class="cell_summary">{{ issue.summary }}</td>
 						<td style="text-align: center;">{{ issue.subtasks|length }}</td>
 						<td>{{ issue.status }}</td>
+						<td>{{ issue.assignee }}</td>
 						<td class="cell_time">{% if issue.aggregatetimeoriginalestimate != None %}{{ issue.aggregatetimeoriginalestimate_str }}{% endif %}</td>
 						<td class="cell_time">{% if issue.aggregatetimespent != None %}{{ issue.aggregatetimespent_str }}{% endif %}</td>
 						<td class="cell_time">{% if issue.aggregatetimeestimate != None %}{{ issue.aggregatetimeestimate_str }}{% endif %}</td>
-						<td class="cell_progress_percentage">{{ issue.progress }}%</td>
+						<td class="cell_progress_percentage">{% if issue.progress != None %}{{ issue.progress }}%{% endif %}</td>
 						<td class="cell_progress"><div class="progress" style="height: 10px; width: {{ issue.progress }}%"><div class="progress-bar" style="height: 10px; width: {{ issue.progress }}%"></div></div></td>
 
-						<td class="cell_status_count">{% if issue.subtask_status_count['Dev In Progress'] > 0 %}{{ issue.subtask_status_count['Dev In Progress'] }}{% endif %}</td>
+						
 						<td class="cell_status_count">{% if issue.subtask_status_count['To Do'] > 0 %}{{ issue.subtask_status_count['To Do'] }}{% endif %}</td>
-						<td class="cell_status_count">{% if issue.subtask_status_count['Done'] > 0 %}{{ issue.subtask_status_count['Done'] }}{% endif %}</td>
+						<td class="cell_status_count">{% if issue.subtask_status_count['Dev In Progress'] > 0 %}{{ issue.subtask_status_count['Dev In Progress'] }}{% endif %}</td>
 						<td class="cell_status_count">{% if issue.subtask_status_count['Dev Review'] > 0 %}{{ issue.subtask_status_count['Dev Review'] }}{% endif %}</td>
 						<td class="cell_status_count">{% if issue.subtask_status_count['Awaiting UAT'] > 0 %}{{ issue.subtask_status_count['Awaiting UAT'] }}{% endif %}</td>
+						<td class="cell_status_count">{% if issue.subtask_status_count['Done'] > 0 %}{{ issue.subtask_status_count['Done'] }}{% endif %}</td>
 
 						{% if issue.subtasks|length > 0 %}
 
@@ -80,16 +83,17 @@
 									<td class="cell_summary">{{ subtask.summary }}</td>
 									<td>{{ subtask.devteam }}</td>
 									<td>{{ subtask.status }}</td>
+									<td>{{ subtask.assignee }}</td>
 									<td class="cell_time">{% if subtask.aggregatetimeoriginalestimate != None %}{{ subtask.aggregatetimeoriginalestimate_str }}{% endif %}</td>
 									<td class="cell_time">{% if subtask.aggregatetimespent != None %}{{ subtask.aggregatetimespent_str }}{% endif %}</td>
 									<td class="cell_time">{% if subtask.aggregatetimeestimate != None %}{{ subtask.aggregatetimeestimate_str }}{% endif %}</td>
-									<td class="cell_progress_percentage">{{ subtask.progress }}%</td>
+									<td class="cell_progress_percentage">{% if subtask.progress != None %}{{ subtask.progress }}%{% endif %}</td>
 									<td class="cell_progress"></td>
-									<td class="cell_status_count">{% if subtask.status == 'Dev In Progress' %}*{% endif %}</td>
 									<td class="cell_status_count">{% if subtask.status == 'To Do' %}*{% endif %}</td>
-									<td class="cell_status_count">{% if subtask.status == 'Done' %}*{% endif %}</td>
+									<td class="cell_status_count">{% if subtask.status == 'Dev In Progress' %}*{% endif %}</td>
 									<td class="cell_status_count">{% if subtask.status == 'Dev Review' %}*{% endif %}</td>
 									<td class="cell_status_count">{% if subtask.status == 'Awaiting UAT' %}*{% endif %}</td>
+									<td class="cell_status_count">{% if subtask.status == 'Done' %}*{% endif %}</td>
 								</tr>
 
 							{% endfor %}
@@ -119,7 +123,7 @@
 	})
 	
 	$(document).ready(function(){
-		$('#sprint_input').attr('placeholder', window.location.pathname.slice(8,10))
+		$('#sprint_input').attr('value', window.location.pathname.slice(8,10))
 	})
 
 </script>

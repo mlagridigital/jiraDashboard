@@ -14,14 +14,14 @@ def get_issues(sprint, search = None):
 			"jql" : "project = ADS AND sprint = " + str(sprint) + " AND type in standardIssueTypes()",
 			"maxResults" : "100",
 			"startAt" : 0,
-			"fields" : "status, subtasks, issuetype, summary, aggregatetimespent, aggregatetimeoriginalestimate, aggregatetimeestimate, customfield_10016"
+			"fields" : "status, subtasks, issuetype, summary, aggregatetimespent, aggregatetimeoriginalestimate, aggregatetimeestimate, customfield_10016, assignee"
 		}
 	elif search == "subtasks":
 		querystring = {
 			"jql" : "project = ADS AND sprint = " + str(sprint) + " AND type in subtaskIssueTypes()",
 			"maxResults" : "100",
 			"startAt" : 0,
-			"fields" : "status, issuetype, summary, aggregatetimespent, aggregatetimeoriginalestimate, aggregatetimeestimate, customfield_10016"
+			"fields" : "status, issuetype, summary, aggregatetimespent, aggregatetimeoriginalestimate, aggregatetimeestimate, customfield_10016, assignee"
 		}
 	else:
 		print("Error: invalid search criteria, only search for stories or subtasks")
@@ -142,19 +142,20 @@ def format_data(stories, subtasks):
 			"aggregatetimespent" : issue['fields']['aggregatetimespent'],
 			"aggregatetimeoriginalestimate" : issue['fields']['aggregatetimeoriginalestimate'],
 			"aggregatetimeestimate" : issue['fields']['aggregatetimeestimate'],
-			"aggregatetimespent_str" : str_time(issue['fields']['aggregatetimespent']),
-			"aggregatetimeoriginalestimate_str" : str_time(issue['fields']['aggregatetimeoriginalestimate']),
-			"aggregatetimeestimate_str" : str_time(issue['fields']['aggregatetimeestimate']),
+			"aggregatetimespent_str" : format_time(issue['fields']['aggregatetimespent']),
+			"aggregatetimeoriginalestimate_str" : format_time(issue['fields']['aggregatetimeoriginalestimate']),
+			"aggregatetimeestimate_str" : format_time(issue['fields']['aggregatetimeestimate']),
 			"progress" : calc_progress(issue['fields']['aggregatetimeoriginalestimate'], issue['fields']['aggregatetimeestimate']),
 			"subtasks" : [],
-			"subtask_status_count" : {
-				"Dev In Progress" : 0,
+			"subtask_status_count" : {			
 				"To Do" : 0,
-				"Done" : 0,
+				"Dev In Progress" : 0,
 				"Dev Review" : 0,
 				"Awaiting UAT" : 0,
+				"Done" : 0,
 			},
 			"sprints" : format_sprints(issue['fields']['customfield_10016']),
+			"assignee" : format_assignee(issue['fields']['assignee']),
 		}
 
 		#print(format_sprints(issue['fields']['customfield_10016']))
@@ -178,10 +179,12 @@ def format_data(stories, subtasks):
 						"aggregatetimespent" : s['fields']['aggregatetimespent'],
 						"aggregatetimeoriginalestimate" : s['fields']['aggregatetimeoriginalestimate'],
 						"aggregatetimeestimate" : s['fields']['aggregatetimeestimate'],
-						"aggregatetimespent_str" : str_time(s['fields']['aggregatetimespent']),
-						"aggregatetimeoriginalestimate_str" : str_time(s['fields']['aggregatetimeoriginalestimate']),
-						"aggregatetimeestimate_str" : str_time(s['fields']['aggregatetimeestimate']),
-						"progress" : calc_progress(s['fields']['aggregatetimeoriginalestimate'], s['fields']['aggregatetimeestimate'])
+						"aggregatetimespent_str" : format_time(s['fields']['aggregatetimespent']),
+						"aggregatetimeoriginalestimate_str" : format_time(s['fields']['aggregatetimeoriginalestimate']),
+						"aggregatetimeestimate_str" : format_time(s['fields']['aggregatetimeestimate']),
+						"progress" : calc_progress(s['fields']['aggregatetimeoriginalestimate'], s['fields']['aggregatetimeestimate']),
+						"sprints" : format_sprints(s['fields']['customfield_10016']),
+						"assignee" : format_assignee(s['fields']['assignee']),
 					}
 
 					if newSubtask['summary'].upper().startswith(("BACK", "API", "PERI"), 1) :
@@ -221,7 +224,7 @@ def format_data(stories, subtasks):
 	# print(json.dumps(subtasks, indent = 4))
 
 
-def str_time(time):
+def format_time(time):
 	"""
 	Given a time in seconds. Return a string "Ww Dd Hh Mm". Where W/D/H/M are the number of weeks, days, hours, minutes in time.
 	"""
@@ -293,6 +296,13 @@ def format_sprints(sprints):
 
 	return sprintsFormatted
 
+
+def format_assignee(assignee):
+
+	if assignee != None:
+		return assignee['displayName']
+
+	return ""
 
 def start(sprint):
 	stories = get_issues(sprint, search = "stories")
