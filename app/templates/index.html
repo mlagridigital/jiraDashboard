@@ -86,7 +86,7 @@
 									<td class="cell_time">{% if subtask.aggregatetimespent != None %}{{ subtask.aggregatetimespent_str }}{% endif %}</td>
 									<td class="cell_time">{% if subtask.aggregatetimeestimate != None %}{{ subtask.aggregatetimeestimate_str }}{% endif %}</td>
 									<td class="cell_progress_percentage">{% if subtask.progress != None %}{{ subtask.progress }}%{% endif %}</td>
-									<td class="cell_progress"></td>
+									<td class="cell_progress"><div class="progress" style="height: 10px; width: 100%"><div class="progress-bar bg-warning" style="height: 10px; width: {{ subtask.progress }}%"></div></div></td>
 									<td class="cell_status_count">{% if subtask.status == 'To Do' %}*{% endif %}</td>
 									<td class="cell_status_count">{% if subtask.status == 'Dev In Progress' %}*{% endif %}</td>
 									<td class="cell_status_count">{% if subtask.status == 'Dev Review' %}*{% endif %}</td>
