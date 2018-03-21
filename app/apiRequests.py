@@ -3,7 +3,7 @@ import json
 
 def get_issues(sprint, search = None):
 	"""
-	TODO -  
+	TODO -  Check data retrival at edge cases. Total == Max Results
 	
 	"""
 		
@@ -37,14 +37,15 @@ def get_issues(sprint, search = None):
 	print("Getting", search)
 	print("Requesting jql query: ", querystring['jql'])
 	print("Filtering for fields: ", querystring['fields'])
+	
 	response = requests.request("GET", url, headers=headers, params=querystring)
-
+	
 	parsed = response.json()
 
-	print("Recieved", len(parsed['issues']), "issues starting at", parsed['startAt'], "of a total of", parsed['total'])
+	print("Recieved", len(parsed['issues']), "issues starting at", parsed['startAt'], "from a total of", parsed['total'])
 
-	# CHECK FOR CASE WHERE NUMBER OF TOTAL == MAXRESULTS
-	# SENSE CHECK DATA - COMPARE AGAINST
+	# Check to see if all issues were received, if not repeat request to retrieve all issues and append to original parsed response
+	# maxResults is the number of issues received per request. total is the total number of issues within the query on Jira. 
 	if parsed['total'] > parsed['maxResults']:
 
 		remaining_calls = parsed['total'] // parsed['maxResults']
@@ -53,7 +54,7 @@ def get_issues(sprint, search = None):
 
 			querystring['startAt'] = (i + 1) * parsed['maxResults']
 			response = requests.request("GET", url, headers=headers, params=querystring).json()
-			print("Recieved", len(response['issues']), "issues starting at", response['startAt'], "of a total of", response['total'])
+			print("Recieved", len(response['issues']), "issues starting at", response['startAt'], "from a total of", response['total'])
 
 			for issue in response['issues']:
 				parsed['issues'].append(issue)
@@ -76,11 +77,6 @@ def format_data(stories, subtasks):
 			idea for error checking  - function should return correct type
 			check jira.tempo to which DEV??; expected none
 			check logs include comments; attention these look to have affected .csv
-	
-		- Add status to issues
-		- SELF URLS
-		- Convert times to useful
-
 
 	# QUESTIONS 
 		- Include Priorities?? 
@@ -105,10 +101,10 @@ def format_data(stories, subtasks):
 	# 	"timespent" : 0,
 	# }
 
-	print("_" * 50)
+	#print("_" * 20)
 	#print(json.dumps(subtasks, indent = 4))
 
-	for i, issue in enumerate(stories):
+	for issue in stories:
 		
 		print("_" * 20)
 		print("Issue Key:", issue['key'])
@@ -163,11 +159,11 @@ def format_data(stories, subtasks):
 
 
 		for subtask in issue['fields']['subtasks']:
-			#print("	Has subtasks:",subtask['key'])
+			#print("  Has subtasks:",subtask['key'])
 
 			for s in subtasks:
 				if s['id'] == subtask['id']:
-					#print("	subtask match", s['id'], subtask['id'])
+					print(" Has subtask match", s['key'], subtask['key'])
 
 					newSubtask = {
 						"id" : s['id'],
@@ -254,8 +250,12 @@ def calc_progress(original_estimate, remaining_time):
 	if isinstance(original_estimate, int):
 		if isinstance(remaining_time, int):
 
+			if original_estimate == 0:
+				print("ZeroError: original_estimate == 0")
+				return None
+
 			progess = round(((original_estimate - remaining_time) / original_estimate) * 100)
-			print("Progres:", progess)
+			#print("Progres:", progess)
 			return progess
 
 	else:
