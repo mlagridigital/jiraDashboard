@@ -14,14 +14,16 @@ def get_issues(sprint, search = None):
 			"jql" : "project = ADS AND sprint = " + str(sprint) + " AND type in standardIssueTypes()",
 			"maxResults" : "100",
 			"startAt" : 0,
-			"fields" : "status, subtasks, issuetype, summary, aggregatetimespent, aggregatetimeoriginalestimate, aggregatetimeestimate, customfield_10016, assignee"
+			"fields" : "status, subtasks, issuetype, summary, aggregatetimespent, aggregatetimeoriginalestimate, aggregatetimeestimate, customfield_10016, assignee",
+			"expand" : "changelog",
 		}
 	elif search == "subtasks":
 		querystring = {
 			"jql" : "project = ADS AND sprint = " + str(sprint) + " AND type in subtaskIssueTypes()",
 			"maxResults" : "100",
 			"startAt" : 0,
-			"fields" : "status, issuetype, summary, aggregatetimespent, aggregatetimeoriginalestimate, aggregatetimeestimate, customfield_10016, assignee"
+			"fields" : "status, issuetype, summary, aggregatetimespent, aggregatetimeoriginalestimate, aggregatetimeestimate, customfield_10016, assignee",
+			"expand" : "changelog",
 		}
 	else:
 		print("Error: invalid search criteria, only search for stories or subtasks")
@@ -158,6 +160,7 @@ def format_data(stories, subtasks):
 			},
 			"sprints" : format_sprints(issue['fields']['customfield_10016']),
 			"assignee" : format_assignee(issue['fields']['assignee']),
+			"changelog" : format_changelog(issue['changelog']),
 		}
 
 		#print(format_sprints(issue['fields']['customfield_10016']))
@@ -167,7 +170,8 @@ def format_data(stories, subtasks):
 
 			for s in subtasks:
 				if s['id'] == subtask['id']:
-					print(" Has subtask match", s['key'], subtask['key'])
+					print("-" * 4)
+					print("Has subtask match", s['key'], subtask['key'])
 
 					newSubtask = {
 						"id" : s['id'],
@@ -187,6 +191,7 @@ def format_data(stories, subtasks):
 						"progress" : calc_progress(s['fields']['aggregatetimeoriginalestimate'], s['fields']['aggregatetimeestimate']),
 						"sprints" : format_sprints(s['fields']['customfield_10016']),
 						"assignee" : format_assignee(s['fields']['assignee']),
+						"changelog" : format_changelog(s['changelog']),
 					}
 
 					if newSubtask['summary'].upper().startswith(("BACK", "API", "PERI"), 1) :
@@ -268,6 +273,7 @@ def calc_progress(original_estimate, remaining_time):
 		print("Error calculating progress as time not int, time: [OE:", original_estimate, ", RE:", remaining_time, "]")
 		return None
 
+
 def format_sprints(sprints):
 
 	#current = True
@@ -306,10 +312,57 @@ def format_assignee(assignee):
 
 	return ""
 
+
+def format_changelog(changelog):
+
+
+
+	if changelog['total'] > changelog['maxResults']:
+		print("Error: changelog pagination required, only", changelog['maxResults'], "of", changelog['total'], "received")
+
+	count = 0
+	for log in reversed(changelog['histories']):
+		first = True
+		
+
+		for item in log['items']:
+			#if item['field'] in ['timespent', 'timeestimate', 'status']:
+
+			if item['field'] not in sprint_log:
+				sprint_log[item['field']] = 1
+			else:
+				sprint_log[item['field']] += 1
+			
+
+			if item['field'] in ['timespent', 'timeestimate', 'status', 'WorklogId', 'timeoriginalestimate', 'WorklogTimeSpent']:
+				
+				if first:
+					count += 1
+					first = False
+
+				if item['field'] == 'status':
+					print(count, log['id'], log['author']['displayName'], log['created'], item['field'], item['fromString'], "->", item['toString'])
+				elif item['field'] == 'WorklogId':
+					print(count, log['id'], log['author']['displayName'], log['created'], item['field'])
+				else:
+					print(count, log['id'], log['author']['displayName'], log['created'], item['field'], item['from'], "->", item['to'])
+
+
+	return "changelog"
+
+
 def start(sprint):
+
+	global sprint_log
+	sprint_log = {}
+
 	stories = get_issues(sprint, search = "stories")
 	subtasks = get_issues(sprint, search = "subtasks")
 	data = format_data(stories, subtasks)
+
+	print("Stories received:", len(stories))
+	print("Subtasks received:", len(subtasks))
+	print(sprint_log)
 
 	return data
 
