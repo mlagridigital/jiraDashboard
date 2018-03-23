@@ -1,6 +1,5 @@
 import requests
 import json
-import re
 
 def get_issues(sprint, search = None):
 	"""
@@ -332,10 +331,10 @@ def format_changelog(changelog):
 		for item in change['items']:
 
 			# Global variable SPRINT_LOG used to track count of instances of changelog items acorss the sprint
-			if item['field'] not in SPRINT_LOG:
-				SPRINT_LOG[item['field']] = 1
-			else:
-				SPRINT_LOG[item['field']] += 1
+			# if item['field'] not in SPRINT_LOG:
+			# 	SPRINT_LOG[item['field']] = 1
+			# else:
+			# 	SPRINT_LOG[item['field']] += 1
 			
 
 			# Filter changelog for fields
@@ -343,10 +342,10 @@ def format_changelog(changelog):
 			#if item['field'] in ['timeestimate', 'timeoriginalestimate', 'timespent']:
 			# if item['field'] not in ['description', 'Attachment', 'assignee', 'Parent', 'Fix Version', 'summary']:
 
-				# Check current item in change against all items in previous change for duplicates
+				# Check current item in change against all items in previous change for duplicates, if duplicate contiune onto the next item not appending a newItem
 				if i_change > 0:
 					if (is_item_in_prev_change(item, histories[i_change - 1]['items'])):
-						print("Duplicate changelog item detected", item['field'])
+						#print("Duplicate changelog item detected", item['field'])
 						continue
 
 				# store new formatted item in formatted changelog
@@ -394,10 +393,17 @@ def calc_dif(to, _from):
 	return dif
 
 
+def burndown_data(data):
+	"""
+	
+	"""
+	
+
+
 def start(sprint):
 
-	global SPRINT_LOG
-	SPRINT_LOG = {}
+	#global SPRINT_LOG
+	#SPRINT_LOG = {}
 
 	stories = get_issues(sprint, search = "stories")
 	subtasks = get_issues(sprint, search = "subtasks")
@@ -405,7 +411,7 @@ def start(sprint):
 
 	print("Stories received:", len(stories))
 	print("Subtasks received:", len(subtasks))
-	print(SPRINT_LOG)
+	#print(SPRINT_LOG)
 
 	return data
 

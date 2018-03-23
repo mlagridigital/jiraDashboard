@@ -22,11 +22,11 @@
 				<span class="input-group-text">Sprint No:</span>
 			</div>
 			<input id="sprint_input" type="text" class="form-control" value="">
-		</div>
-		
-		
-		
+		</div>		
 	</div>
+
+	<!-- ______________________  TABLE   ______________________ -->
+	
 	<div class="container-fluid">
 		<table class="table table-condensed">
 			<thead>
@@ -103,6 +103,10 @@
 			</tbody>
 		</table>
 	</div>
+
+	
+
+
 </body>
 
 <script type="text/javascript">
@@ -121,8 +125,13 @@
 	})
 	
 	$(document).ready(function(){
-		$('#sprint_input').attr('value', window.location.pathname.slice(8,10))
+		$('#sprint_input').attr('value', window.location.pathname.slice(8,10));
+		$.get('/sprint/76/data').done(function(data){
+			console.log(data)
+		});
 	})
+
+	
 
 </script>
 
