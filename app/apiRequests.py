@@ -307,71 +307,55 @@ def format_assignee(assignee):
 
 
 def format_changelog(changelog):
+	"""
+		
+	Current changelog  => changelog{ histories : [ items[] ] }
+	Change log contains a list, histories, where each change in histories is a list of items that were changed at that change instance
+	Formatted changelog is a list of change items
 
+		TODO:
+			- NEED TO CHANGE TIMESHEET ID TO DISPLAYNAME
+			- NEED TO FORMAT DATE INTO USEABLE
+	"""
+
+	# Check if all changelog histories have been received
 	if changelog['total'] > changelog['maxResults']:
 		print("Error: changelog pagination required, only", changelog['maxResults'], "of", changelog['total'], "received")
 
 	
 	changelogFormatted = []
 
+	# Sort current changelog in descending order - created first is now top
 	histories = changelog['histories'][::-1]
 
-	for i_logs, log in enumerate(histories):
-		#first = True
-		
+	for i_change, change in enumerate(histories):
+		for item in change['items']:
 
-		for item in log['items']:
-			#if item['field'] in ['timespent', 'timeestimate', 'status']:
-
-			if item['field'] not in sprint_log:
-				sprint_log[item['field']] = 1
+			# Global variable SPRINT_LOG used to track count of instances of changelog items acorss the sprint
+			if item['field'] not in SPRINT_LOG:
+				SPRINT_LOG[item['field']] = 1
 			else:
-				sprint_log[item['field']] += 1
+				SPRINT_LOG[item['field']] += 1
 			
 
+			# Filter changelog for fields
 			if item['field'] in ['timespent', 'timeestimate', 'status', 'WorklogId', 'timeoriginalestimate', 'WorklogTimeSpent', 'resolution', 'resolutiondate']:
 			#if item['field'] in ['timeestimate', 'timeoriginalestimate', 'timespent']:
 			# if item['field'] not in ['description', 'Attachment', 'assignee', 'Parent', 'Fix Version', 'summary']:
 
-
-				# NEED TO CHANGE TIMESHEET ID TO DISPLAYNAME
-				newItem_author = log['author']['displayName']
-
-				# NEED TO FORMAT DATE INTO USEABLE
-				newItem_created = log['created']
-
-				newItem_field = item['field']
-				newItem_from = item['from']
-				newItem_to = item['to']
-				
-				# # check if this the first item within the changelog
-				# if first:
-				# 	first = False
-
-#				if item['field'] in ['status', 'resolution', 'resolutiondate']:
-				#print(i_logs, log['id'], log['author']['displayName'], log['created'], item['field'], item['fromString'], "->", item['toString'])
-				newItem_from = item['fromString']
-				newItem_to = item['toString']
-				
-#				elif item['field'] in ['timespent', 'timeestimate']:
-#					time_dif = calc_dif(item['to'], item['from'])
-#					print(i_logs, log['id'], log['author']['displayName'], log['created'], item['field'], item['from'], "->", item['to'], '=', time_dif)
-
-				if i_logs > 0:
-					if (is_item_in_prev_log(item, histories[i_logs - 1]['items'])):
+				# Check current item in change against all items in previous change for duplicates
+				if i_change > 0:
+					if (is_item_in_prev_change(item, histories[i_change - 1]['items'])):
 						print("Duplicate changelog item detected", item['field'])
 						continue
-				# else:
-				# 	print(i_logs, log['id'], log['author']['displayName'], log['created'], item['field'], item['from'], "->", item['to'])
 
-
-
+				# store new formatted item in formatted changelog
 				newItem = {
-					'author' : newItem_author,
-					'created' : newItem_created,
-					'field' : newItem_field,
-					'from' : newItem_from,
-					'to' : newItem_to,
+					'author' : change['author']['displayName'],
+					'created' : change['created'],
+					'field' : item['field'],
+					'from' : item['fromString'],
+					'to' : item['toString'],
 				}
 
 				changelogFormatted.append(newItem)
@@ -382,11 +366,11 @@ def format_changelog(changelog):
 	return changelogFormatted
 
 
-def is_item_in_prev_log(item, prev_log):
+def is_item_in_prev_change(item, prev_change):
 	"""
-	Check current item against all items in previous log, return True if current item is a duplicate item else return False
+	Check current item against all items in previous change, return True if current item is a duplicate item else return False
 	"""
-	for prev_item in prev_log:
+	for prev_item in prev_change:
 		#print("checking", item, "\nagainst", prev_item)
 		if prev_item['field'] == item['field'] and item['from'] == prev_item['from'] and item['to'] == prev_item['to']:
 			return True
@@ -396,7 +380,6 @@ def is_item_in_prev_log(item, prev_log):
 
 def format_timestamp(timestamp):
 	pass
-
 
 
 def calc_dif(to, _from):
@@ -413,8 +396,8 @@ def calc_dif(to, _from):
 
 def start(sprint):
 
-	global sprint_log
-	sprint_log = {}
+	global SPRINT_LOG
+	SPRINT_LOG = {}
 
 	stories = get_issues(sprint, search = "stories")
 	subtasks = get_issues(sprint, search = "subtasks")
@@ -422,7 +405,7 @@ def start(sprint):
 
 	print("Stories received:", len(stories))
 	print("Subtasks received:", len(subtasks))
-	print(sprint_log)
+	print(SPRINT_LOG)
 
 	return data
 
