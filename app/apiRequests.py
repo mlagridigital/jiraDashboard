@@ -1,5 +1,6 @@
 import requests
 import json
+import re
 
 def get_issues(sprint, search = None):
 	"""
@@ -83,6 +84,7 @@ def format_data(stories, subtasks):
 	# QUESTIONS 
 		- Include Priorities?? 
 		- For Defects, Bugs and Subtasks include ROOT CAUSE
+		- How should treat story level tasks?
 		- How should I treat bugs - as stories or supports
 		- Creating burn downs, should stories be associated to a dev team and the timespent aggregated? 
 		- How should I treat TECH-DEBT?
@@ -110,7 +112,7 @@ def format_data(stories, subtasks):
 
 	for issue in stories:
 		
-		print("_" * 20)
+		print("_" * 30)
 		print("Issue Key:", issue['key'])
 		print("Issue type name:", issue['fields']['issuetype']['name'])
 
@@ -121,19 +123,12 @@ def format_data(stories, subtasks):
 				supportIssues['timespent'] += issue['fields']['aggregatetimespent']
 			continue
 
-		# FILTER OUT 'TASKS'
-
-
 		#WHAT TO DO WITH BUGS -- TREAT AS STORY OR SUPPORT
 		# if issue['fields']['issuetype']['name'] == "Bug":
 		# 	bugIssues['count'] += 1
 		# 	if isinstance(issue['fields']['aggregatetimespent'], int):
 		# 		bugIssues['timespent'] += issue['fields']['aggregatetimespent']
 		# 	continue
-
-		# WHAT TO DO WITH TECH-DEBT?
-
-		# FORMAT self to url
 
 		newStory = {
 			"id" : issue['id'],
@@ -166,12 +161,12 @@ def format_data(stories, subtasks):
 		#print(format_sprints(issue['fields']['customfield_10016']))
 
 		for subtask in issue['fields']['subtasks']:
-			#print("  Has subtasks:",subtask['key'])
 
 			for s in subtasks:
 				if s['id'] == subtask['id']:
 					print("-" * 4)
-					print("Has subtask match", s['key'], subtask['key'])
+					print("Subtask key", subtask['key'])
+					print("Subtask type:", s['fields']['issuetype']['name'])
 
 					newSubtask = {
 						"id" : s['id'],
@@ -281,9 +276,7 @@ def format_sprints(sprints):
 	# sprints are stacked on the end of the list, last member of the
 	sprintsFormatted = []
 
-	for i, s in enumerate(reversed(sprints)):
-
-
+	for s in reversed(sprints):
 
 		temp = {}
 
@@ -315,14 +308,16 @@ def format_assignee(assignee):
 
 def format_changelog(changelog):
 
-
-
 	if changelog['total'] > changelog['maxResults']:
 		print("Error: changelog pagination required, only", changelog['maxResults'], "of", changelog['total'], "received")
 
-	count = 0
-	for log in reversed(changelog['histories']):
-		first = True
+	
+	changelogFormatted = []
+
+	histories = changelog['histories'][::-1]
+
+	for i_logs, log in enumerate(histories):
+		#first = True
 		
 
 		for item in log['items']:
@@ -334,21 +329,86 @@ def format_changelog(changelog):
 				sprint_log[item['field']] += 1
 			
 
-			if item['field'] in ['timespent', 'timeestimate', 'status', 'WorklogId', 'timeoriginalestimate', 'WorklogTimeSpent']:
+			if item['field'] in ['timespent', 'timeestimate', 'status', 'WorklogId', 'timeoriginalestimate', 'WorklogTimeSpent', 'resolution', 'resolutiondate']:
+			#if item['field'] in ['timeestimate', 'timeoriginalestimate', 'timespent']:
+			# if item['field'] not in ['description', 'Attachment', 'assignee', 'Parent', 'Fix Version', 'summary']:
+
+
+				# NEED TO CHANGE TIMESHEET ID TO DISPLAYNAME
+				newItem_author = log['author']['displayName']
+
+				# NEED TO FORMAT DATE INTO USEABLE
+				newItem_created = log['created']
+
+				newItem_field = item['field']
+				newItem_from = item['from']
+				newItem_to = item['to']
 				
-				if first:
-					count += 1
-					first = False
+				# # check if this the first item within the changelog
+				# if first:
+				# 	first = False
 
-				if item['field'] == 'status':
-					print(count, log['id'], log['author']['displayName'], log['created'], item['field'], item['fromString'], "->", item['toString'])
-				elif item['field'] == 'WorklogId':
-					print(count, log['id'], log['author']['displayName'], log['created'], item['field'])
-				else:
-					print(count, log['id'], log['author']['displayName'], log['created'], item['field'], item['from'], "->", item['to'])
+#				if item['field'] in ['status', 'resolution', 'resolutiondate']:
+				#print(i_logs, log['id'], log['author']['displayName'], log['created'], item['field'], item['fromString'], "->", item['toString'])
+				newItem_from = item['fromString']
+				newItem_to = item['toString']
+				
+#				elif item['field'] in ['timespent', 'timeestimate']:
+#					time_dif = calc_dif(item['to'], item['from'])
+#					print(i_logs, log['id'], log['author']['displayName'], log['created'], item['field'], item['from'], "->", item['to'], '=', time_dif)
+
+				if i_logs > 0:
+					if (is_item_in_prev_log(item, histories[i_logs - 1]['items'])):
+						print("Duplicate changelog item detected", item['field'])
+						continue
+				# else:
+				# 	print(i_logs, log['id'], log['author']['displayName'], log['created'], item['field'], item['from'], "->", item['to'])
 
 
-	return "changelog"
+
+				newItem = {
+					'author' : newItem_author,
+					'created' : newItem_created,
+					'field' : newItem_field,
+					'from' : newItem_from,
+					'to' : newItem_to,
+				}
+
+				changelogFormatted.append(newItem)
+
+	
+	#print(json.dumps(changelogFormatted, indent = 4))
+
+	return changelogFormatted
+
+
+def is_item_in_prev_log(item, prev_log):
+	"""
+	Check current item against all items in previous log, return True if current item is a duplicate item else return False
+	"""
+	for prev_item in prev_log:
+		#print("checking", item, "\nagainst", prev_item)
+		if prev_item['field'] == item['field'] and item['from'] == prev_item['from'] and item['to'] == prev_item['to']:
+			return True
+
+	return False
+
+
+def format_timestamp(timestamp):
+	pass
+
+
+
+def calc_dif(to, _from):
+
+	if to is None:
+		to = 0
+	if _from is None:
+		_from = 0
+	
+	dif = int(to) - int(_from)
+
+	return dif
 
 
 def start(sprint):
