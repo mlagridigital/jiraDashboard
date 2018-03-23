@@ -1,5 +1,6 @@
 import requests
 import json
+import dateutil.parser
 
 def get_issues(sprint, search = None):
 	"""
@@ -14,7 +15,7 @@ def get_issues(sprint, search = None):
 			"jql" : "project = ADS AND sprint = " + str(sprint) + " AND type in standardIssueTypes()",
 			"maxResults" : "100",
 			"startAt" : 0,
-			"fields" : "status, subtasks, issuetype, summary, aggregatetimespent, aggregatetimeoriginalestimate, aggregatetimeestimate, customfield_10016, assignee",
+			"fields" : "status, subtasks, issuetype, summary, aggregatetimespent, aggregatetimeoriginalestimate, aggregatetimeestimate, customfield_10016, assignee, created",
 			"expand" : "changelog",
 		}
 	elif search == "subtasks":
@@ -22,7 +23,7 @@ def get_issues(sprint, search = None):
 			"jql" : "project = ADS AND sprint = " + str(sprint) + " AND type in subtaskIssueTypes()",
 			"maxResults" : "100",
 			"startAt" : 0,
-			"fields" : "status, issuetype, summary, aggregatetimespent, aggregatetimeoriginalestimate, aggregatetimeestimate, customfield_10016, assignee",
+			"fields" : "status, issuetype, summary, aggregatetimespent, aggregatetimeoriginalestimate, aggregatetimeestimate, customfield_10016, assignee, created",
 			"expand" : "changelog",
 		}
 	else:
@@ -155,6 +156,7 @@ def format_data(stories, subtasks):
 			"sprints" : format_sprints(issue['fields']['customfield_10016']),
 			"assignee" : format_assignee(issue['fields']['assignee']),
 			"changelog" : format_changelog(issue['changelog']),
+			"created" : dateutil.parser.parse(issue['fields']['created']),
 		}
 
 		#print(format_sprints(issue['fields']['customfield_10016']))
@@ -186,6 +188,7 @@ def format_data(stories, subtasks):
 						"sprints" : format_sprints(s['fields']['customfield_10016']),
 						"assignee" : format_assignee(s['fields']['assignee']),
 						"changelog" : format_changelog(s['changelog']),
+						"created" : dateutil.parser.parse(issue['fields']['created']),
 					}
 
 					if newSubtask['summary'].upper().startswith(("BACK", "API", "PERI"), 1) :
@@ -212,7 +215,7 @@ def format_data(stories, subtasks):
 
 	data = {
 		"stories" : storiesFormated,
-		"supoort" : supportIssues
+		"support" : supportIssues
 	}
 
 	return data
@@ -314,7 +317,6 @@ def format_changelog(changelog):
 
 		TODO:
 			- NEED TO CHANGE TIMESHEET ID TO DISPLAYNAME
-			- NEED TO FORMAT DATE INTO USEABLE
 	"""
 
 	# Check if all changelog histories have been received
@@ -351,7 +353,7 @@ def format_changelog(changelog):
 				# store new formatted item in formatted changelog
 				newItem = {
 					'author' : change['author']['displayName'],
-					'created' : change['created'],
+					'created' : dateutil.parser.parse(change['created']),
 					'field' : item['field'],
 					'from' : item['fromString'],
 					'to' : item['toString'],
@@ -377,10 +379,6 @@ def is_item_in_prev_change(item, prev_change):
 	return False
 
 
-def format_timestamp(timestamp):
-	pass
-
-
 def calc_dif(to, _from):
 
 	if to is None:
@@ -393,11 +391,67 @@ def calc_dif(to, _from):
 	return dif
 
 
-def burndown_data(data):
+def get_burndown(stories, devteam):
 	"""
 	
 	"""
+
+	if devteam not in ['Front End', 'Backend', 'Test']:
+		print("Error: get_burndown - devteam not in ['Front End', 'Backend', 'Test']")
+
+	raw_data = []
+	burndown_data = []
+
+	for story in stories:
+		#print('--', story['key'], story['created'])
+		# sort_data(story['changelog'], story['created'], 'timeestimate')
+
+		for subtask in story['subtasks']:
+			# print('--', subtask['key'], subtask['created'])
+			if subtask['devteam'] == devteam:
+				raw_data.extend(collect_changes_and_dates(subtask['changelog'], subtask['created'], 'timeestimate'))
 	
+	for line in raw_data:
+		print(line)
+	
+	print('-'*20)
+
+	raw_data.sort(key = lambda e: e[0])
+	total = 0
+	for line in raw_data:
+		# print(line)
+		total += line[1]
+		burndown_data.append([line[0], total])
+
+	for line in burndown_data:
+		print(line)
+
+	return burndown_data
+
+def collect_changes_and_dates(changelog, issue_created, field):
+	"""
+	important case - if first timeestimate chang e['from'] in changelog is not None, then fist item in burndown data should be from 0 to change['from']
+	with timestamp = issue['created'] timestamp
+
+	"""
+	issue_burndown = []
+	first_timestimate = True
+
+	for i, change in enumerate(changelog):
+		if change['field'] == field:
+
+			if first_timestimate:
+				first_timestimate = False
+				if change['from'] is not None:
+					issue_burndown.append([issue_created, int(change['from'])])
+			
+			issue_burndown.append([change['created'], calc_dif(change['to'], change['from'])])
+
+			#print(change['created'], change['from'], '->', change['to'], '=', calc_dif(change['to'], change['from']))
+
+	#print(issue_burndown)
+	return issue_burndown
+
 
 
 def start(sprint):

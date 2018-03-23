@@ -10,6 +10,7 @@
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 
 </head>
 <body>
@@ -26,85 +27,95 @@
 	</div>
 
 	<!-- ______________________  TABLE   ______________________ -->
-	
 	<div class="container-fluid">
-		<table class="table table-condensed">
-			<thead>
-				<tr>
-					<th>Issue Key</th>
-					<th>Issue Type      </th>
-					<th class="cell_summary">Summary</th>
-					<th>Subtask   </th>
-					<th>Status               </th>
-					<th>Assignee      </th>
-					<th>Original Estimate</th>
-					<th>Time Spent</th>
-					<th>Remaining Time</th>
-					<th>Progress</th>
-					<th></th>
-					<th>To Do </th>
-					<th>In Dev</th>
-					<th>DevRev</th>
-					<th>Aw UAT</th>
-					<th>Done  </th>
-				</tr>
-			</thead>
-			<tbody>
-				{% for issue in stories %}
-					<tr class="row_story">
-
-						<td><a href="{{ issue.self }}">{{ issue.key }}</a></td>
-						<td><img src="{{ issue.issuetypeIcon }}" height="15" width="15"> {{ issue.issuetype }}</td>
-						<td class="cell_summary">{{ issue.summary }}</td>
-						<td style="text-align: center;">{{ issue.subtasks|length }}</td>
-						<td>{{ issue.status }}</td>
-						<td>{{ issue.assignee }}</td>
-						<td class="cell_time">{% if issue.aggregatetimeoriginalestimate != None %}{{ issue.aggregatetimeoriginalestimate_str }}{% endif %}</td>
-						<td class="cell_time">{% if issue.aggregatetimespent != None %}{{ issue.aggregatetimespent_str }}{% endif %}</td>
-						<td class="cell_time">{% if issue.aggregatetimeestimate != None %}{{ issue.aggregatetimeestimate_str }}{% endif %}</td>
-						<td class="cell_progress_percentage">{% if issue.progress != None %}{{ issue.progress }}%{% endif %}</td>
-						<td class="cell_progress"><div class="progress" style="height: 10px; width: 100%"><div class="progress-bar" style="height: 10px; width: {{ issue.progress }}%"></div></div></td>						
-						<td class="cell_status_count">{% if issue.subtask_status_count['To Do'] > 0 %}{{ issue.subtask_status_count['To Do'] }}{% endif %}</td>
-						<td class="cell_status_count">{% if issue.subtask_status_count['Dev In Progress'] > 0 %}{{ issue.subtask_status_count['Dev In Progress'] }}{% endif %}</td>
-						<td class="cell_status_count">{% if issue.subtask_status_count['Dev Review'] > 0 %}{{ issue.subtask_status_count['Dev Review'] }}{% endif %}</td>
-						<td class="cell_status_count">{% if issue.subtask_status_count['Awaiting UAT'] > 0 %}{{ issue.subtask_status_count['Awaiting UAT'] }}{% endif %}</td>
-						<td class="cell_status_count">{% if issue.subtask_status_count['Done'] > 0 %}{{ issue.subtask_status_count['Done'] }}{% endif %}</td>
-
-						{% if issue.subtasks|length > 0 %}
-
-							{% for subtask in issue.subtasks %}
-
-								<tr class="row_subtask">
-									
-									<td><a href="{{ subtask.self }}">{{ subtask.key }}</td></a>
-									<td><img src="{{ subtask.issuetypeIcon }}" height="15" width="15"> {{ subtask.issuetype }}</td>
-									<td class="cell_summary">{{ subtask.summary }}</td>
-									<td>{{ subtask.devteam }}</td>
-									<td>{{ subtask.status }}</td>
-									<td>{{ subtask.assignee }}</td>
-									<td class="cell_time">{% if subtask.aggregatetimeoriginalestimate != None %}{{ subtask.aggregatetimeoriginalestimate_str }}{% endif %}</td>
-									<td class="cell_time">{% if subtask.aggregatetimespent != None %}{{ subtask.aggregatetimespent_str }}{% endif %}</td>
-									<td class="cell_time">{% if subtask.aggregatetimeestimate != None %}{{ subtask.aggregatetimeestimate_str }}{% endif %}</td>
-									<td class="cell_progress_percentage">{% if subtask.progress != None %}{{ subtask.progress }}%{% endif %}</td>
-									<td class="cell_progress"><div class="progress" style="height: 10px; width: 100%"><div class="progress-bar bg-warning" style="height: 10px; width: {{ subtask.progress }}%"></div></div></td>
-									<td class="cell_status_count">{% if subtask.status == 'To Do' %}*{% endif %}</td>
-									<td class="cell_status_count">{% if subtask.status == 'Dev In Progress' %}*{% endif %}</td>
-									<td class="cell_status_count">{% if subtask.status == 'Dev Review' %}*{% endif %}</td>
-									<td class="cell_status_count">{% if subtask.status == 'Awaiting UAT' %}*{% endif %}</td>
-									<td class="cell_status_count">{% if subtask.status == 'Done' %}*{% endif %}</td>
-								</tr>
-
-							{% endfor %}
-
-						{% endif %}
-
+	<div class="row">
+		<div class="container-fluid">
+			<table class="table table-condensed">
+				<thead>
+					<tr>
+						<th>Issue Key</th>
+						<th>Issue Type      </th>
+						<th class="cell_summary">Summary</th>
+						<th>Subtask   </th>
+						<th>Status               </th>
+						<th>Assignee      </th>
+						<th>Original Estimate</th>
+						<th>Time Spent</th>
+						<th>Remaining Time</th>
+						<th>Progress</th>
+						<th></th>
+						<th>To Do </th>
+						<th>In Dev</th>
+						<th>DevRev</th>
+						<th>Aw UAT</th>
+						<th>Done  </th>
 					</tr>
-				{% endfor %}
-			</tbody>
-		</table>
+				</thead>
+				<tbody>
+					{% for issue in stories %}
+						<tr class="row_story">
+
+							<td><a href="{{ issue.self }}">{{ issue.key }}</a></td>
+							<td><img src="{{ issue.issuetypeIcon }}" height="15" width="15"> {{ issue.issuetype }}</td>
+							<td class="cell_summary">{{ issue.summary }}</td>
+							<td style="text-align: center;">{{ issue.subtasks|length }}</td>
+							<td>{{ issue.status }}</td>
+							<td>{{ issue.assignee }}</td>
+							<td class="cell_time">{% if issue.aggregatetimeoriginalestimate != None %}{{ issue.aggregatetimeoriginalestimate_str }}{% endif %}</td>
+							<td class="cell_time">{% if issue.aggregatetimespent != None %}{{ issue.aggregatetimespent_str }}{% endif %}</td>
+							<td class="cell_time">{% if issue.aggregatetimeestimate != None %}{{ issue.aggregatetimeestimate_str }}{% endif %}</td>
+							<td class="cell_progress_percentage">{% if issue.progress != None %}{{ issue.progress }}%{% endif %}</td>
+							<td class="cell_progress"><div class="progress" style="height: 10px; width: 100%"><div class="progress-bar" style="height: 10px; width: {{ issue.progress }}%"></div></div></td>						
+							<td class="cell_status_count">{% if issue.subtask_status_count['To Do'] > 0 %}{{ issue.subtask_status_count['To Do'] }}{% endif %}</td>
+							<td class="cell_status_count">{% if issue.subtask_status_count['Dev In Progress'] > 0 %}{{ issue.subtask_status_count['Dev In Progress'] }}{% endif %}</td>
+							<td class="cell_status_count">{% if issue.subtask_status_count['Dev Review'] > 0 %}{{ issue.subtask_status_count['Dev Review'] }}{% endif %}</td>
+							<td class="cell_status_count">{% if issue.subtask_status_count['Awaiting UAT'] > 0 %}{{ issue.subtask_status_count['Awaiting UAT'] }}{% endif %}</td>
+							<td class="cell_status_count">{% if issue.subtask_status_count['Done'] > 0 %}{{ issue.subtask_status_count['Done'] }}{% endif %}</td>
+
+							{% if issue.subtasks|length > 0 %}
+
+								{% for subtask in issue.subtasks %}
+
+									<tr class="row_subtask">
+										
+										<td><a href="{{ subtask.self }}">{{ subtask.key }}</td></a>
+										<td><img src="{{ subtask.issuetypeIcon }}" height="15" width="15"> {{ subtask.issuetype }}</td>
+										<td class="cell_summary">{{ subtask.summary }}</td>
+										<td>{{ subtask.devteam }}</td>
+										<td>{{ subtask.status }}</td>
+										<td>{{ subtask.assignee }}</td>
+										<td class="cell_time">{% if subtask.aggregatetimeoriginalestimate != None %}{{ subtask.aggregatetimeoriginalestimate_str }}{% endif %}</td>
+										<td class="cell_time">{% if subtask.aggregatetimespent != None %}{{ subtask.aggregatetimespent_str }}{% endif %}</td>
+										<td class="cell_time">{% if subtask.aggregatetimeestimate != None %}{{ subtask.aggregatetimeestimate_str }}{% endif %}</td>
+										<td class="cell_progress_percentage">{% if subtask.progress != None %}{{ subtask.progress }}%{% endif %}</td>
+										<td class="cell_progress"><div class="progress" style="height: 10px; width: 100%"><div class="progress-bar bg-warning" style="height: 10px; width: {{ subtask.progress }}%"></div></div></td>
+										<td class="cell_status_count">{% if subtask.status == 'To Do' %}*{% endif %}</td>
+										<td class="cell_status_count">{% if subtask.status == 'Dev In Progress' %}*{% endif %}</td>
+										<td class="cell_status_count">{% if subtask.status == 'Dev Review' %}*{% endif %}</td>
+										<td class="cell_status_count">{% if subtask.status == 'Awaiting UAT' %}*{% endif %}</td>
+										<td class="cell_status_count">{% if subtask.status == 'Done' %}*{% endif %}</td>
+									</tr>
+
+								{% endfor %}
+
+							{% endif %}
+
+						</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
 	</div>
 
+
 	
+	<div class="row">
+		<div class="container">
+			<canvas id="myChart" width="400" height="400"></canvas>
+		</div>
+	</div>
+
+
 
 
 </body>
@@ -124,12 +135,41 @@
 		}
 	})
 	
-	$(document).ready(function(){
-		$('#sprint_input').attr('value', window.location.pathname.slice(8,10));
-		$.get('/sprint/76/data').done(function(data){
-			console.log(data)
-		});
-	})
+	data = ({{ backend_burndown|tojson|safe }})
+
+	// var data = {{ new_data }}
+
+	// $(document).ready(function(){
+	// 	$('#sprint_input').attr('value', window.location.pathname.slice(8,10));
+	// 	$.get('/sprint/76/data').done(function(data){
+	// 		console.log(data)
+	// 	});
+	// })
+
+	google.charts.load('current', {'packages':['line']});
+    google.charts.setOnLoadCallback(drawChart);
+
+    function drawChart() {
+
+      var data = new google.visualization.DataTable();
+
+      data.addRows(data);
+
+      var options = {
+        width: 900,
+        height: 500,
+      };
+
+      var chart = new google.charts.Line(document.getElementById('myChart'));
+
+      chart.draw(data, google.charts.Line.convertOptions(options));
+    }
+
+	// var ctx = $("#myChart");
+	// var myChart = new Chart(ctx, {
+	// 	type : 'line',
+	// 	data : data,
+	// })
 
 	
 
