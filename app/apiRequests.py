@@ -2,6 +2,7 @@ import requests
 import json
 import dateutil.parser
 import csv
+from datetime import timedelta
 
 def get_issues(sprint, search = None):
 	"""
@@ -411,11 +412,6 @@ def get_burndown(stories, devteam):
 			# print('--', subtask['key'], subtask['created'])
 			if subtask['devteam'] == devteam:
 				raw_data.extend(collect_changes_and_dates(subtask['changelog'], subtask['created'], 'timeestimate'))
-	
-	for line in raw_data:
-		print(line)
-	
-	print('-'*20)
 
 	raw_data.sort(key = lambda e: e[0])
 	total = 0
@@ -425,12 +421,13 @@ def get_burndown(stories, devteam):
 		total += line[1]
 		burndown_data.append([line[0], total])
 
-	with open('data.csv', 'w') as f:
-		writer = csv.writer(f)
-		for line in burndown_data:
-			writer.writerow(line)
+	# with open('data.csv', 'w') as f:
+	# 	writer = csv.writer(f)
+	# 	for line in burndown_data:
+	# 		writer.writerow(line)
 
 	return burndown_data
+
 
 def collect_changes_and_dates(changelog, issue_created, field):
 	"""
@@ -456,6 +453,12 @@ def collect_changes_and_dates(changelog, issue_created, field):
 	#print(issue_burndown)
 	return issue_burndown
 
+
+def get_burndown_axes(stories):
+
+	start_date = dateutil.parser.parse(stories[0]['sprints'][0]['startDate'])
+	end_date = dateutil.parser.parse(stories[0]['sprints'][0]['endDate'])
+	pass
 
 
 def start(sprint):
