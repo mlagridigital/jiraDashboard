@@ -1,5 +1,8 @@
 import requests
 import json
+import dateutil.parser
+import csv
+from datetime import timedelta
 
 def get_issues(sprint, search = None):
 	"""
@@ -14,14 +17,16 @@ def get_issues(sprint, search = None):
 			"jql" : "project = ADS AND sprint = " + str(sprint) + " AND type in standardIssueTypes()",
 			"maxResults" : "100",
 			"startAt" : 0,
-			"fields" : "status, subtasks, issuetype, summary, aggregatetimespent, aggregatetimeoriginalestimate, aggregatetimeestimate, customfield_10016, assignee"
+			"fields" : "status, subtasks, issuetype, summary, aggregatetimespent, aggregatetimeoriginalestimate, aggregatetimeestimate, customfield_10016, assignee, created",
+			"expand" : "changelog",
 		}
 	elif search == "subtasks":
 		querystring = {
 			"jql" : "project = ADS AND sprint = " + str(sprint) + " AND type in subtaskIssueTypes()",
 			"maxResults" : "100",
 			"startAt" : 0,
-			"fields" : "status, issuetype, summary, aggregatetimespent, aggregatetimeoriginalestimate, aggregatetimeestimate, customfield_10016, assignee"
+			"fields" : "status, issuetype, summary, aggregatetimespent, aggregatetimeoriginalestimate, aggregatetimeestimate, customfield_10016, assignee, created",
+			"expand" : "changelog",
 		}
 	else:
 		print("Error: invalid search criteria, only search for stories or subtasks")
@@ -81,6 +86,7 @@ def format_data(stories, subtasks):
 	# QUESTIONS 
 		- Include Priorities?? 
 		- For Defects, Bugs and Subtasks include ROOT CAUSE
+		- How should treat story level tasks?
 		- How should I treat bugs - as stories or supports
 		- Creating burn downs, should stories be associated to a dev team and the timespent aggregated? 
 		- How should I treat TECH-DEBT?
@@ -108,7 +114,7 @@ def format_data(stories, subtasks):
 
 	for issue in stories:
 		
-		print("_" * 20)
+		print("_" * 30)
 		print("Issue Key:", issue['key'])
 		print("Issue type name:", issue['fields']['issuetype']['name'])
 
@@ -119,19 +125,12 @@ def format_data(stories, subtasks):
 				supportIssues['timespent'] += issue['fields']['aggregatetimespent']
 			continue
 
-		# FILTER OUT 'TASKS'
-
-
 		#WHAT TO DO WITH BUGS -- TREAT AS STORY OR SUPPORT
 		# if issue['fields']['issuetype']['name'] == "Bug":
 		# 	bugIssues['count'] += 1
 		# 	if isinstance(issue['fields']['aggregatetimespent'], int):
 		# 		bugIssues['timespent'] += issue['fields']['aggregatetimespent']
 		# 	continue
-
-		# WHAT TO DO WITH TECH-DEBT?
-
-		# FORMAT self to url
 
 		newStory = {
 			"id" : issue['id'],
@@ -158,16 +157,19 @@ def format_data(stories, subtasks):
 			},
 			"sprints" : format_sprints(issue['fields']['customfield_10016']),
 			"assignee" : format_assignee(issue['fields']['assignee']),
+			"changelog" : format_changelog(issue['changelog']),
+			"created" : dateutil.parser.parse(issue['fields']['created']),
 		}
 
 		#print(format_sprints(issue['fields']['customfield_10016']))
 
 		for subtask in issue['fields']['subtasks']:
-			#print("  Has subtasks:",subtask['key'])
 
 			for s in subtasks:
 				if s['id'] == subtask['id']:
-					print(" Has subtask match", s['key'], subtask['key'])
+					print("-" * 4)
+					print("Subtask key", subtask['key'])
+					print("Subtask type:", s['fields']['issuetype']['name'])
 
 					newSubtask = {
 						"id" : s['id'],
@@ -187,6 +189,8 @@ def format_data(stories, subtasks):
 						"progress" : calc_progress(s['fields']['aggregatetimeoriginalestimate'], s['fields']['aggregatetimeestimate']),
 						"sprints" : format_sprints(s['fields']['customfield_10016']),
 						"assignee" : format_assignee(s['fields']['assignee']),
+						"changelog" : format_changelog(s['changelog']),
+						"created" : dateutil.parser.parse(issue['fields']['created']),
 					}
 
 					if newSubtask['summary'].upper().startswith(("BACK", "API", "PERI"), 1) :
@@ -213,7 +217,7 @@ def format_data(stories, subtasks):
 
 	data = {
 		"stories" : storiesFormated,
-		"supoort" : supportIssues
+		"support" : supportIssues
 	}
 
 	return data
@@ -268,6 +272,7 @@ def calc_progress(original_estimate, remaining_time):
 		print("Error calculating progress as time not int, time: [OE:", original_estimate, ", RE:", remaining_time, "]")
 		return None
 
+
 def format_sprints(sprints):
 
 	#current = True
@@ -275,9 +280,7 @@ def format_sprints(sprints):
 	# sprints are stacked on the end of the list, last member of the
 	sprintsFormatted = []
 
-	for i, s in enumerate(reversed(sprints)):
-
-
+	for s in reversed(sprints):
 
 		temp = {}
 
@@ -306,10 +309,170 @@ def format_assignee(assignee):
 
 	return ""
 
+
+def format_changelog(changelog):
+	"""
+		
+	Current changelog  => changelog{ histories : [ items[] ] }
+	Change log contains a list, histories, where each change in histories is a list of items that were changed at that change instance
+	Formatted changelog is a list of change items
+
+		TODO:
+			- NEED TO CHANGE TIMESHEET ID TO DISPLAYNAME
+	"""
+
+	# Check if all changelog histories have been received
+	if changelog['total'] > changelog['maxResults']:
+		print("Error: changelog pagination required, only", changelog['maxResults'], "of", changelog['total'], "received")
+
+	
+	changelogFormatted = []
+
+	# Sort current changelog in descending order - created first is now top
+	histories = changelog['histories'][::-1]
+
+	for i_change, change in enumerate(histories):
+		for item in change['items']:
+
+			# Global variable SPRINT_LOG used to track count of instances of changelog items acorss the sprint
+			# if item['field'] not in SPRINT_LOG:
+			# 	SPRINT_LOG[item['field']] = 1
+			# else:
+			# 	SPRINT_LOG[item['field']] += 1
+			
+
+			# Filter changelog for fields
+			if item['field'] in ['timespent', 'timeestimate', 'status', 'WorklogId', 'timeoriginalestimate', 'WorklogTimeSpent', 'resolution', 'resolutiondate']:
+			#if item['field'] in ['timeestimate', 'timeoriginalestimate', 'timespent']:
+			# if item['field'] not in ['description', 'Attachment', 'assignee', 'Parent', 'Fix Version', 'summary']:
+
+				# Check current item in change against all items in previous change for duplicates, if duplicate contiune onto the next item not appending a newItem
+				if i_change > 0:
+					if (is_item_in_prev_change(item, histories[i_change - 1]['items'])):
+						#print("Duplicate changelog item detected", item['field'])
+						continue
+
+				# store new formatted item in formatted changelog
+				newItem = {
+					'author' : change['author']['displayName'],
+					'created' : dateutil.parser.parse(change['created']),
+					'field' : item['field'],
+					'from' : item['fromString'],
+					'to' : item['toString'],
+				}
+
+				changelogFormatted.append(newItem)
+
+	
+	#print(json.dumps(changelogFormatted, indent = 4))
+
+	return changelogFormatted
+
+
+def is_item_in_prev_change(item, prev_change):
+	"""
+	Check current item against all items in previous change, return True if current item is a duplicate item else return False
+	"""
+	for prev_item in prev_change:
+		#print("checking", item, "\nagainst", prev_item)
+		if prev_item['field'] == item['field'] and item['from'] == prev_item['from'] and item['to'] == prev_item['to']:
+			return True
+
+	return False
+
+
+def calc_dif(to, _from):
+
+	if to is None:
+		to = 0
+	if _from is None:
+		_from = 0
+	
+	dif = int(to) - int(_from)
+
+	return dif
+
+
+def get_burndown(stories, devteam):
+	"""
+	
+	"""
+
+	if devteam not in ['Front End', 'Backend', 'Test']:
+		print("Error: get_burndown - devteam not in ['Front End', 'Backend', 'Test']")
+
+	raw_data = []
+	burndown_data = []
+
+	for story in stories:
+		#print('--', story['key'], story['created'])
+		# sort_data(story['changelog'], story['created'], 'timeestimate')
+
+		for subtask in story['subtasks']:
+			# print('--', subtask['key'], subtask['created'])
+			if subtask['devteam'] == devteam:
+				raw_data.extend(collect_changes_and_dates(subtask['changelog'], subtask['created'], 'timeestimate'))
+
+	raw_data.sort(key = lambda e: e[0])
+	total = 0
+
+	for line in raw_data:
+		# print(line)
+		total += line[1]
+		burndown_data.append([line[0], total])
+
+	# with open('data.csv', 'w') as f:
+	# 	writer = csv.writer(f)
+	# 	for line in burndown_data:
+	# 		writer.writerow(line)
+
+	return burndown_data
+
+
+def collect_changes_and_dates(changelog, issue_created, field):
+	"""
+	important case - if first timeestimate chang e['from'] in changelog is not None, then fist item in burndown data should be from 0 to change['from']
+	with timestamp = issue['created'] timestamp
+
+	"""
+	issue_burndown = []
+	first_timestimate = True
+
+	for i, change in enumerate(changelog):
+		if change['field'] == field:
+
+			if first_timestimate:
+				first_timestimate = False
+				if change['from'] is not None:
+					issue_burndown.append([issue_created, int(change['from'])])
+			
+			issue_burndown.append([change['created'], calc_dif(change['to'], change['from'])])
+
+			#print(change['created'], change['from'], '->', change['to'], '=', calc_dif(change['to'], change['from']))
+
+	#print(issue_burndown)
+	return issue_burndown
+
+
+def get_burndown_axes(stories):
+
+	start_date = dateutil.parser.parse(stories[0]['sprints'][0]['startDate'])
+	end_date = dateutil.parser.parse(stories[0]['sprints'][0]['endDate'])
+	pass
+
+
 def start(sprint):
+
+	#global SPRINT_LOG
+	#SPRINT_LOG = {}
+
 	stories = get_issues(sprint, search = "stories")
 	subtasks = get_issues(sprint, search = "subtasks")
 	data = format_data(stories, subtasks)
+
+	print("Stories received:", len(stories))
+	print("Subtasks received:", len(subtasks))
+	#print(SPRINT_LOG)
 
 	return data
 
