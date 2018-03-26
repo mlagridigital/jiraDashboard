@@ -1,6 +1,7 @@
 import requests
 import json
 import dateutil.parser
+import csv
 
 def get_issues(sprint, search = None):
 	"""
@@ -418,13 +419,16 @@ def get_burndown(stories, devteam):
 
 	raw_data.sort(key = lambda e: e[0])
 	total = 0
+
 	for line in raw_data:
 		# print(line)
 		total += line[1]
 		burndown_data.append([line[0], total])
 
-	for line in burndown_data:
-		print(line)
+	with open('data.csv', 'w') as f:
+		writer = csv.writer(f)
+		for line in burndown_data:
+			writer.writerow(line)
 
 	return burndown_data
 

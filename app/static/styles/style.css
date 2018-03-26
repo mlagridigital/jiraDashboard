@@ -96,4 +96,10 @@ th.cell_summary, td.cell_summary {
 	text-align: : center;
 }
 
+.chart_div {
+	display: block;
+	margin-left: auto;
+    margin-right: auto;
+}
+
 

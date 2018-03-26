@@ -8,7 +8,8 @@ def index(sprint_id):
 
 	data = apiRequests.start(sprint_id)
 	backend_burndown = apiRequests.get_burndown(data['stories'], 'Backend')
-	return render_template('index.html', stories = (data['stories']), backend_burndown = backend_burndown)
+	frontend_burndown = apiRequests.get_burndown(data['stories'], 'Front End')
+	return render_template('index.html', stories = (data['stories']), backend_burndown = backend_burndown, frontend_burndown = frontend_burndown)
 
 
 @app.route('/sprint/<int:sprint_id>/data')

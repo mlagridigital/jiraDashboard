@@ -26,10 +26,14 @@
 		</div>		
 	</div>
 
-	<!-- ______________________  TABLE   ______________________ -->
+	
+	
 	<div class="container-fluid">
-	<div class="row">
-		<div class="container-fluid">
+
+		<!--   TABLE    -->
+		<h2>Sprint Stories</h2>
+		<br>
+		<div class="row">
 			<table class="table table-condensed">
 				<thead>
 					<tr>
@@ -105,14 +109,19 @@
 				</tbody>
 			</table>
 		</div>
-	</div>
 
-
-	
-	<div class="row">
-		<div class="container">
-			<canvas id="myChart" width="400" height="400"></canvas>
+		<!--   BURNDOWNS    -->
+		<br>
+		<h2>Sprint Burndown</h2>
+		<div class="row">
+			<div class="col-lg-6">
+					<div id="backend_burndown_chart" class="chart_div"></div>
+			</div>
+			<div class="col-lg-6 chart_div">
+					<div id="frontend_burndown_chart" class="chart_div"></div>
+			</div>
 		</div>
+
 	</div>
 
 
@@ -129,15 +138,12 @@
 
 	$('#sprint_input').keypress(function(e){
 		if(e.which == 13){
-			console.log("sprint_input entered");
-			console.log($(this).val());
+			console.log("sprint_input entered:", $(this).val());
+			console.log();
 			window.location.replace(window.location.origin + "/sprint/" + $(this).val())
 		}
 	})
 	
-	data = ({{ backend_burndown|tojson|safe }})
-
-	// var data = {{ new_data }}
 
 	// $(document).ready(function(){
 	// 	$('#sprint_input').attr('value', window.location.pathname.slice(8,10));
@@ -147,29 +153,66 @@
 	// })
 
 	google.charts.load('current', {'packages':['line']});
-    google.charts.setOnLoadCallback(drawChart);
+    google.charts.setOnLoadCallback(drawBackendBurndown);
+    google.charts.setOnLoadCallback(drawFrontendBurndown);
 
-    function drawChart() {
+    // var raw_data = {{ backend_burndown|tojson|safe }};
 
-      var data = new google.visualization.DataTable();
+    function drawBackendBurndown() {
 
-      data.addRows(data);
+      var data = new google.visualization.DataTable(
+      	{
+      		cols: [{id: 'datetime', label: 'Time', type: 'date'},
+	      	       {id: 'timeestimate', label: 'Time Estimate', type:'number'}
+	      	       ],
+	      	rows: [{% for d in  backend_burndown %}{c: [{v: new Date('{{ d[0] }}')}, {v: {{ d[1] /(60 * 60) }}}]},
+
+	      	{% endfor %}]
+      	});
+
+      // data.addRows();
 
       var options = {
-        width: 900,
-        height: 500,
+      	title: 'Backend subtasks',
+      	vAxis: {title: 'Time Estimate [Hours]'},
+      	legend: {position: 'none'},
+      	height: 400,
+      	width: 700,
       };
 
-      var chart = new google.charts.Line(document.getElementById('myChart'));
+      var chart = new google.charts.Line(document.getElementById('backend_burndown_chart'));
 
       chart.draw(data, google.charts.Line.convertOptions(options));
     }
 
-	// var ctx = $("#myChart");
-	// var myChart = new Chart(ctx, {
-	// 	type : 'line',
-	// 	data : data,
-	// })
+
+    function drawFrontendBurndown() {
+
+      var data = new google.visualization.DataTable(
+      	{
+      		cols: [{id: 'datetime', label: 'Time', type: 'date'},
+	      	       {id: 'timeestimate', label: 'Time Estimate', type:'number'}
+	      	       ],
+	      	rows: [{% for d in  frontend_burndown %}{c: [{v: new Date('{{ d[0] }}')}, {v: {{ d[1] /(60 * 60) }}}]},
+
+	      	{% endfor %}]
+      	});
+
+      // data.addRows();
+
+      var options = {
+      	title: 'Front End subtasks',
+      	vAxis: {title: 'Time Estimate [Hours]'},
+      	legend: {position: 'none'},
+      	series: {0: { color: '#e2431e'}},
+      	height: 400,
+      	width: 700,
+      };
+
+      var chart = new google.charts.Line(document.getElementById('frontend_burndown_chart'));
+
+      chart.draw(data, google.charts.Line.convertOptions(options));
+    }
 
 	
 
