@@ -6,11 +6,16 @@
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 	
 	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles/style.css') }}">
-
+<!-- 
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+ -->
+	<script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/jquery-ui.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/loader.js') }}"></script>
 
 </head>
 <body>
@@ -27,14 +32,23 @@
 	</div>
 
 	
-	
+	<!--   DASHBOARD    -->
+
 	<div class="container-fluid">
 
 		<!--   TABLE    -->
-		<h2>Sprint Stories</h2>
-		<button id="table_expand_all" type="button" class="btn btn-success btn-expand_all">Expand All</button>
+
+		<div class="row">
+			<div class="col-lg-6" align="left">
+				<h3>Sprint Stories</h3>
+			</div>
+			<div class="col-lg-6" align="right">
+				<button id="table_expand_all" type="button" class="btn btn-success btn-expand_all">Expand All</button>
+			</div>
+		</div>
+		
 		<br>
-		<br>
+
 		<div class="row">
 			<table class="table table-condensed">
 				<thead>
@@ -114,13 +128,19 @@
 
 		<!--   BURNDOWNS    -->
 		<br>
-		<h2>Sprint Burndown</h2>
+
+		<div class="row">
+			<h3>Sprint Burndown</h3>
+		</div>
+
+		<br>
+
 		<div class="row">
 			<div class="col-lg-6">
-					<div id="backend_burndown_chart" class="chart_div"></div>
+				<div id="backend_burndown_chart" class="chart_div"></div>
 			</div>
-			<div class="col-lg-6 chart_div">
-					<div id="frontend_burndown_chart" class="chart_div"></div>
+			<div class="col-lg-6">
+				<div id="frontend_burndown_chart" class="chart_div"></div>
 			</div>
 		</div>
 
@@ -140,13 +160,12 @@
 
 	$('#sprint_input').keypress(function(e){
 		if(e.which == 13){
-			console.log("sprint_input entered:", $(this).val());
-			console.log();
+			console.log("Sprint_input entered:", $(this).val());
 			window.location.replace(window.location.origin + "/sprint/" + $(this).val())
 		}
-	})
+	});
 
-	$('div').on('click', 'button.btn-expand_all', function(event) {
+	$('div.row').on('click', 'button.btn-expand_all', function(event) {
 		$('tr.row_subtask').attr("style", "display: table-row;");
 		$(this).removeClass("btn-success");
 		$(this).addClass("btn-warning");
@@ -155,7 +174,7 @@
 		$(this).text("Collapse All");
 	})
 	
-	$('div').on('click', 'button.btn-collapse_all', function(event){
+	$('div.row').on('click', 'button.btn-collapse_all', function(event){
 		$('tr.row_subtask').attr("style", "display: none;");
 		$(this).addClass("btn-success");
 		$(this).removeClass("btn-warning");
@@ -179,7 +198,9 @@
 	start_date.setMinutes(0);
 	start_date.setHours(0);
 
-	for(i = 1; i < 14; i++){ticks_list.push({v: new Date(Date.parse(start_date) + i * millieconds_per_day)})};
+	for(i = 1; i < 14; i++){
+		ticks_list.push({v: new Date(Date.parse(start_date) + i * millieconds_per_day)})
+	};
 
 	google.charts.load('current', {'packages':['line']});
     google.charts.setOnLoadCallback(drawBackendBurndown);
@@ -202,10 +223,10 @@
       	title: 'Backend subtasks',
       	vAxis: {title: 'Time Estimate [Hours]'},
       	hAxis: {
-      		viewWindow: {
-      			min: new Date('{{ stories[0]['sprints'][0]['startDate'] }}'),
-      			max: new Date('{{ stories[0]['sprints'][0]['endDate'] }}'),
-      		}
+      		// viewWindow: {
+      		// 	min: new Date('{{ stories[0]['sprints'][0]['startDate'] }}'),
+      		// 	max: new Date('{{ stories[0]['sprints'][0]['endDate'] }}'),
+      		// }
       	},
       	legend: {position: 'none'},
       	height: 400,
@@ -217,27 +238,16 @@
       chart.draw(data, google.charts.Line.convertOptions(options));
     }
 
-
-
     function drawFrontendBurndown() {
-      
-
-
-      // var end_date = new Date ('{{ stories[0]['sprints'][0]['endDate'] }}');
-      // start_date.setMilliseconds(0);
-      // start_date.setSeconds(59);
-      // start_date.setMinutes(59);
-      // start_date.setHours(23);
-
-
 
       var data = new google.visualization.DataTable(
       	{
       		cols: [{id: 'datetime', label: 'Time', type: 'date'},
-	      	       {id: 'timeestimate', label: 'Time Estimate', type:'number'}
+	      	       {id: 'timeestimate', label: 'Time Estimate', type: 'number'},
+	      	       {role: 'tooltip', label:'Key', type: 'string'},
 	      	       ],
-	      	rows: [{% for d in  frontend_burndown %}{c: [{v: new Date('{{ d[0] }}')}, {v: {{ d[1] /(60 * 60) }}}]},
-	      	{% endfor %}]
+	      	rows: [{% for d in  frontend_burndown %}{c: [{v: new Date('{{ d[0] }}')}, {v: {{ d[1] /(60 * 60) }}}, {v: '{{ d[2] }}'}]},
+	      		{% endfor %}]
       	});
 
       // data.addRows();
@@ -250,7 +260,6 @@
       			min: start_date,
       			max: new Date(Date.parse(start_date) + 14 * millieconds_per_day),
       		},
-      		showTextEvery: 1,
             ticks: ticks_list,
         },
       	legend: {position: 'none'},
@@ -259,15 +268,9 @@
       	width: 700,
       };
 
-
-      
-
       var chart = new google.charts.Line(document.getElementById('frontend_burndown_chart'));
 
       chart.draw(data, google.charts.Line.convertOptions(options));
-
-      console.log(options)
-      console.log(chart)
     }
 
 	

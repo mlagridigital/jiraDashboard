@@ -3,6 +3,7 @@ import json
 import dateutil.parser
 import csv
 from datetime import timedelta
+import pickle
 
 def get_issues(sprint, search = None):
 	"""
@@ -117,6 +118,7 @@ def format_data(stories, subtasks):
 		print("_" * 30)
 		print("Issue Key:", issue['key'])
 		print("Issue type name:", issue['fields']['issuetype']['name'])
+		print('OE:', issue['fields']['aggregatetimeoriginalestimate'], 'TE:', issue['fields']['aggregatetimeestimate'], 'TS:', issue['fields']['aggregatetimespent'])
 
 		# Filter out support tasks
 		if issue['fields']['issuetype']['name'] == "Support ":
@@ -170,6 +172,7 @@ def format_data(stories, subtasks):
 					print("-" * 4)
 					print("Subtask key", subtask['key'])
 					print("Subtask type:", s['fields']['issuetype']['name'])
+					print('OE:', s['fields']['aggregatetimeoriginalestimate'], 'TE:', s['fields']['aggregatetimeestimate'], 'TS:', s['fields']['aggregatetimespent'])
 
 					newSubtask = {
 						"id" : s['id'],
@@ -325,7 +328,11 @@ def format_changelog(changelog):
 	if changelog['total'] > changelog['maxResults']:
 		print("Error: changelog pagination required, only", changelog['maxResults'], "of", changelog['total'], "received")
 
-	
+
+
+
+
+
 	changelogFormatted = []
 
 	# Sort current changelog in descending order - created first is now top
@@ -334,16 +341,10 @@ def format_changelog(changelog):
 	for i_change, change in enumerate(histories):
 		for item in change['items']:
 
-			# Global variable SPRINT_LOG used to track count of instances of changelog items acorss the sprint
-			# if item['field'] not in SPRINT_LOG:
-			# 	SPRINT_LOG[item['field']] = 1
-			# else:
-			# 	SPRINT_LOG[item['field']] += 1
-			
-
 			# Filter changelog for fields
-			if item['field'] in ['timespent', 'timeestimate', 'status', 'WorklogId', 'timeoriginalestimate', 'WorklogTimeSpent', 'resolution', 'resolutiondate']:
-			#if item['field'] in ['timeestimate', 'timeoriginalestimate', 'timespent']:
+			# if item['field']:
+			if item['field'] in ['timespent', 'timeestimate', 'timeoriginalestimate', 'status', 'WorklogId', 'WorklogTimeSpent', 'resolution', 'resolutiondate', 'Sprint']:
+			# if item['field'] in ['timespent', 'timeestimate', 'timeoriginalestimate', 'status']:
 			# if item['field'] not in ['description', 'Attachment', 'assignee', 'Parent', 'Fix Version', 'summary']:
 
 				# Check current item in change against all items in previous change for duplicates, if duplicate contiune onto the next item not appending a newItem
@@ -363,9 +364,21 @@ def format_changelog(changelog):
 
 				changelogFormatted.append(newItem)
 
-	
-	#print(json.dumps(changelogFormatted, indent = 4))
+				if DEBUG['changelog']:
+					if item['field'] in ['timespent', 'timeestimate', 'timeoriginalestimate',]:
+						print(str(i_change).ljust(3), str(newItem['author']).ljust(20), str(newItem['created']).ljust(32), str(newItem['field']).rjust(20), str(newItem['from']).rjust(15), '->', str(newItem['to']).ljust(6), '=', str(calc_dif(newItem['to'], newItem['from'])).rjust(6))
+					else:
+						print(str(i_change).ljust(3), str(newItem['author']).ljust(20), str(newItem['created']).ljust(32), str(newItem['field']).rjust(20), str(newItem['from']).rjust(15), '->', str(newItem['to']))
+			
 
+			# Global variable SPRINT_LOG used to track count of instances of changelog items acorss the sprint
+			if item['field'] not in SPRINT_LOG:
+				SPRINT_LOG[item['field']] = 1
+			else:
+				SPRINT_LOG[item['field']] += 1
+			
+
+	#print(json.dumps(changelogFormatted, indent = 4))
 	return changelogFormatted
 
 
@@ -405,13 +418,14 @@ def get_burndown(stories, devteam):
 	burndown_data = []
 
 	for story in stories:
-		#print('--', story['key'], story['created'])
-		# sort_data(story['changelog'], story['created'], 'timeestimate')
-
 		for subtask in story['subtasks']:
-			# print('--', subtask['key'], subtask['created'])
 			if subtask['devteam'] == devteam:
-				raw_data.extend(collect_changes_and_dates(subtask['changelog'], subtask['created'], 'timeestimate'))
+				print()
+				print(subtask['key'])
+				print(subtask['devteam'])
+				print(subtask['created'])
+				print('OE:', subtask['aggregatetimeoriginalestimate'], 'TE:', subtask['aggregatetimeestimate'], 'TS:', subtask['aggregatetimespent'])
+				raw_data.extend(collect_changes_and_dates(subtask['changelog'], subtask['created'], 'timeestimate', subtask['aggregatetimeoriginalestimate'], subtask['key']))
 
 	raw_data.sort(key = lambda e: e[0])
 	total = 0
@@ -419,7 +433,7 @@ def get_burndown(stories, devteam):
 	for line in raw_data:
 		# print(line)
 		total += line[1]
-		burndown_data.append([line[0], total])
+		burndown_data.append([line[0], total, line[2]])
 
 	# with open('data.csv', 'w') as f:
 	# 	writer = csv.writer(f)
@@ -429,28 +443,38 @@ def get_burndown(stories, devteam):
 	return burndown_data
 
 
-def collect_changes_and_dates(changelog, issue_created, field):
+def collect_changes_and_dates(changelog, issue_created, field, subtask_originalestimate, subtask_key):
 	"""
 	important case - if first timeestimate chang e['from'] in changelog is not None, then fist item in burndown data should be from 0 to change['from']
 	with timestamp = issue['created'] timestamp
 
 	"""
 	issue_burndown = []
-	first_timestimate = True
+	first_timeEstimate = True
 
 	for i, change in enumerate(changelog):
 		if change['field'] == field:
 
-			if first_timestimate:
-				first_timestimate = False
+			if first_timeEstimate:
+				first_timeEstimate = False
+
 				if change['from'] is not None:
-					issue_burndown.append([issue_created, int(change['from'])])
-			
-			issue_burndown.append([change['created'], calc_dif(change['to'], change['from'])])
+					issue_burndown.append([issue_created, int(change['from']), subtask_key])
+					print('-', str(issue_created).ljust(32), str(change['from']).rjust(25))
 
-			#print(change['created'], change['from'], '->', change['to'], '=', calc_dif(change['to'], change['from']))
+			issue_burndown.append([change['created'], calc_dif(change['to'], change['from']), subtask_key])
+			print('-', str(change['created']).ljust(32), str(change['from']).rjust(6), '->', str(change['to']).ljust(6), '=', str(calc_dif(change['to'], change['from'])).rjust(6))
 
-	#print(issue_burndown)
+	if len(issue_burndown) == 0 and subtask_originalestimate is not None:
+		issue_burndown.append([issue_created, subtask_originalestimate, subtask_key])
+		print('-', str(issue_created).ljust(32), 'no changes', subtask_originalestimate)
+	
+
+	if DEBUG['burndown']:
+		print('issue_burndown')
+		for line in issue_burndown:
+			print(str(line[0]).ljust(32), str(line[1]).rjust(7))
+
 	return issue_burndown
 
 
@@ -463,16 +487,46 @@ def get_burndown_axes(stories):
 
 def start(sprint):
 
-	#global SPRINT_LOG
-	#SPRINT_LOG = {}
+	global SPRINT_LOG
+	SPRINT_LOG = {}
 
-	stories = get_issues(sprint, search = "stories")
-	subtasks = get_issues(sprint, search = "subtasks")
+	global DEBUG
+	DEBUG = {
+		'changelog' : True,
+		'burndown' : True,
+	}
+
+
+	OFFLINE_MODE = True
+
+	if OFFLINE_MODE:
+		with open('stories.pkl', 'rb') as f:
+			stories = pickle.load(f)
+		with open('subtasks.pkl', 'rb') as f:
+			subtasks = pickle.load(f)
+
+		print('-'*20)
+		print()
+		print('!! OFFLINE MODE !!')
+		print()
+		print('-'*20)
+
+	else:	
+		stories = get_issues(sprint, search = "stories")
+		subtasks = get_issues(sprint, search = "subtasks")
+
+		print("Stories received:", len(stories))
+		print("Subtasks received:", len(subtasks))
+		
+		with open('stories.pkl', 'wb') as f:
+			pickle.dump(stories, f)
+		with open('subtasks.pkl', 'wb') as f:
+			pickle.dump(subtasks, f)
+
+
 	data = format_data(stories, subtasks)
 
-	print("Stories received:", len(stories))
-	print("Subtasks received:", len(subtasks))
-	#print(SPRINT_LOG)
+	print(SPRINT_LOG)
 
 	return data
 
