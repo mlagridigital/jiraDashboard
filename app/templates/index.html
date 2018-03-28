@@ -15,7 +15,7 @@
 	<script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='js/jquery-ui.js') }}"></script>
-	<script src="{{ url_for('static', filename='js/loader.js') }}"></script>
+	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 
 </head>
 <body>
@@ -81,9 +81,9 @@
 							<td style="text-align: center;">{{ issue.subtasks|length }}</td>
 							<td>{{ issue.status }}</td>
 							<td>{{ issue.assignee }}</td>
-							<td class="cell_time">{% if issue.aggregatetimeoriginalestimate != None %}{{ issue.aggregatetimeoriginalestimate_str }}{% endif %}</td>
-							<td class="cell_time">{% if issue.aggregatetimespent != None %}{{ issue.aggregatetimespent_str }}{% endif %}</td>
-							<td class="cell_time">{% if issue.aggregatetimeestimate != None %}{{ issue.aggregatetimeestimate_str }}{% endif %}</td>
+							<td class="cell_time" actual="{{ issue.aggregatetimeoriginalestimate }}">{% if issue.aggregatetimeoriginalestimate != None %}{{ issue.aggregatetimeoriginalestimate_str }}{% endif %}</td>
+							<td class="cell_time" actual="{{ issue.aggregatetimespent }}">{% if issue.aggregatetimespent != None %}{{ issue.aggregatetimespent_str }}{% endif %}</td>
+							<td class="cell_time" actual="{{ issue.aggregatetimeestimate }}">{% if issue.aggregatetimeestimate != None %}{{ issue.aggregatetimeestimate_str }}{% endif %}</td>
 							<td class="cell_progress_percentage">{% if issue.progress != None %}{{ issue.progress }}%{% endif %}</td>
 							<td class="cell_progress"><div class="progress" style="height: 10px; width: 100%"><div class="progress-bar" style="height: 10px; width: {{ issue.progress }}%"></div></div></td>						
 							<td class="cell_status_count">{% if issue.subtask_status_count['To Do'] > 0 %}{{ issue.subtask_status_count['To Do'] }}{% endif %}</td>
@@ -104,9 +104,9 @@
 										<td>{{ subtask.devteam }}</td>
 										<td>{{ subtask.status }}</td>
 										<td>{{ subtask.assignee }}</td>
-										<td class="cell_time">{% if subtask.aggregatetimeoriginalestimate != None %}{{ subtask.aggregatetimeoriginalestimate_str }}{% endif %}</td>
-										<td class="cell_time">{% if subtask.aggregatetimespent != None %}{{ subtask.aggregatetimespent_str }}{% endif %}</td>
-										<td class="cell_time">{% if subtask.aggregatetimeestimate != None %}{{ subtask.aggregatetimeestimate_str }}{% endif %}</td>
+										<td class="cell_time" actual="{{ subtask.aggregatetimeoriginalestimate }}">{% if subtask.aggregatetimeoriginalestimate != None %}{{ subtask.aggregatetimeoriginalestimate_str }}{% endif %}</td>
+										<td class="cell_time" actual="{{ subtask.aggregatetimespent }}">{% if subtask.aggregatetimespent != None %}{{ subtask.aggregatetimespent_str }}{% endif %}</td>
+										<td class="cell_time" actual="{{ subtask.aggregatetimeestimate }}">{% if subtask.aggregatetimeestimate != None %}{{ subtask.aggregatetimeestimate_str }}{% endif %}</td>
 										<td class="cell_progress_percentage">{% if subtask.progress != None %}{{ subtask.progress }}%{% endif %}</td>
 										<td class="cell_progress"><div class="progress" style="height: 10px; width: 100%"><div class="progress-bar bg-warning" style="height: 10px; width: {{ subtask.progress }}%"></div></div></td>
 										<td class="cell_status_count">{% if subtask.status == 'To Do' %}*{% endif %}</td>
@@ -226,11 +226,12 @@
       		// viewWindow: {
       		// 	min: new Date('{{ stories[0]['sprints'][0]['startDate'] }}'),
       		// 	max: new Date('{{ stories[0]['sprints'][0]['endDate'] }}'),
-      		// }
+      		// },
+      		format: 'MMM d',
       	},
       	legend: {position: 'none'},
-      	height: 400,
-      	width: 700,
+      	height: 500,
+      	width: 550,
       };
 
       var chart = new google.charts.Line(document.getElementById('backend_burndown_chart'));
@@ -246,7 +247,7 @@
 	      	       {id: 'timeestimate', label: 'Time Estimate', type: 'number'},
 	      	       {role: 'tooltip', label:'Key', type: 'string'},
 	      	       ],
-	      	rows: [{% for d in  frontend_burndown %}{c: [{v: new Date('{{ d[0] }}')}, {v: {{ d[1] /(60 * 60) }}}, {v: '{{ d[2] }}'}]},
+	      	rows: [{% for d in  frontend_burndown %}{c: [{v: new Date('{{ d[0] }}')}, {v: {{ d[1] / (60 * 60) }}}, {v: '{{ d[2] }}'}]},
 	      		{% endfor %}]
       	});
 
@@ -256,16 +257,21 @@
       	title: 'Front End subtasks',
       	vAxis: {title: 'Time Estimate [Hours]'},
       	hAxis: {
-      		viewWindow: {
-      			min: start_date,
-      			max: new Date(Date.parse(start_date) + 14 * millieconds_per_day),
-      		},
-            ticks: ticks_list,
+      		// viewWindow: {
+      		// 	min: new Date('{{ stories[0]['sprints'][0]['startDate'] }}'),
+      		// 	max: new Date('{{ stories[0]['sprints'][0]['endDate'] }}'),
+      		// },
+      		format: 'MMM d hh:mm',
+        },
+        vAxis: {
+        	gridlines: {
+        		count: 3,
+        	}
         },
       	legend: {position: 'none'},
       	series: {0: { color: '#e2431e'}},
-      	height: 400,
-      	width: 700,
+      	height: 500,
+      	width: 550,
       };
 
       var chart = new google.charts.Line(document.getElementById('frontend_burndown_chart'));
