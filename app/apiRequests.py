@@ -19,7 +19,7 @@ def get_issues(sprint, search=None):
             "jql": "project = ADS AND sprint = " + str(sprint) + " AND type in standardIssueTypes()",
             "maxResults": "100",
             "startAt": 0,
-            "fields": "status, subtasks, issuetype, summary, aggregatetimespent, aggregatetimeoriginalestimate, aggregatetimeestimate, customfield_10016, assignee, created",
+            "fields": "status, subtasks, issuetype, summary, aggregatetimespent, aggregatetimeoriginalestimate, aggregatetimeestimate, customfield_10016, assignee, created, timespent, timeoriginalestimate, timeestimate",
             "expand": "changelog",
         }
     elif search == "subtasks":
@@ -121,8 +121,10 @@ def format_data(stories, subtasks):
         print("_" * 30)
         print("Issue Key:", issue['key'])
         print("Issue type name:", issue['fields']['issuetype']['name'])
-        print('OE:', issue['fields']['aggregatetimeoriginalestimate'], 'TE:', issue['fields']
+        print('AGG ::', 'OE:', issue['fields']['aggregatetimeoriginalestimate'], 'TE:', issue['fields']
               ['aggregatetimeestimate'], 'TS:', issue['fields']['aggregatetimespent'])
+        print('OE:', issue['fields']['timeoriginalestimate'], 'TE:', issue['fields']
+              ['timeestimate'], 'TS:', issue['fields']['timespent'])
 
         # Filter out support tasks
         if issue['fields']['issuetype']['name'] == "Support ":
@@ -146,6 +148,9 @@ def format_data(stories, subtasks):
             "status": issue['fields']['status']['name'],
             "issuetype": issue['fields']['issuetype']['name'],
             "issuetypeIcon": issue['fields']['issuetype']['iconUrl'],
+            "timespent": issue['fields']['timespent'],
+            "timeoriginalestimate": issue['fields']['timeoriginalestimate'],
+            "timeestimate": issue['fields']['timeestimate'],
             "aggregatetimespent": issue['fields']['aggregatetimespent'],
             "aggregatetimeoriginalestimate": issue['fields']['aggregatetimeoriginalestimate'],
             "aggregatetimeestimate": issue['fields']['aggregatetimeestimate'],
@@ -153,13 +158,15 @@ def format_data(stories, subtasks):
             "aggregatetimeoriginalestimate_str": format_time(issue['fields']['aggregatetimeoriginalestimate']),
             "aggregatetimeestimate_str": format_time(issue['fields']['aggregatetimeestimate']),
             "progress": calc_progress(issue['fields']['aggregatetimeoriginalestimate'], issue['fields']['aggregatetimeestimate']),
+            "isSubtask" : False,
             "subtasks": [],
             "subtask_status_count": {
-                    "To Do": 0,
+                "To Do": 0,
                 "Dev In Progress": 0,
                 "Dev Review": 0,
                 "Awaiting UAT": 0,
                 "Done": 0,
+                "Reopened": 0,
             },
             "sprints": format_sprints(issue['fields']['customfield_10016']),
             "assignee": format_assignee(issue['fields']['assignee']),
@@ -203,6 +210,7 @@ def format_data(stories, subtasks):
                         "assignee": format_assignee(s['fields']['assignee']),
                         "changelog": format_changelog(s['changelog']),
                         "created": dateutil.parser.parse(s['fields']['created']),
+                        "isSubtask" : True,
                     }
 
                     if newSubtask['summary'].upper().startswith(("BACK", "API", "PERI"), 1):
@@ -223,6 +231,10 @@ def format_data(stories, subtasks):
 
                     s_status = s['fields']['status']['name']
                     newStory['subtask_status_count'][s_status] += 1
+
+                    subtask_burndown = collect_changes_and_dates(newSubtask['changelog'], newSubtask['created'], 'timeestimate', newSubtask['aggregatetimeoriginalestimate'])
+                    subtask_burndown = adjust_burndown_startdate(subtask_burndown, newSubtask['sprints'][0]['startDate'], newSubtask['sprints'][0]['id'])
+
 
         storiesFormated.append(newStory)
         #print(json.dumps(newStory, indent = 4))
@@ -302,6 +314,8 @@ def format_sprints(sprints):
             value = i.split('=')[1]
             temp[key] = value
 
+        print(temp['startDate'])
+
         sprintsFormatted.append({
             "current": "",
             "id": temp['id'],
@@ -311,6 +325,9 @@ def format_sprints(sprints):
             "endDate": dateutil.parser.parse(temp['endDate']),
             "completeDate": temp['completeDate']
         })
+
+        print(dateutil.parser.parse(temp['startDate']))
+
 
     return sprintsFormatted
 
@@ -412,34 +429,50 @@ def calc_dif(to, _from):
     return dif
 
 
+
+def filter_burndown(burndown, issueType):
+    pass
+
+
 def get_burndown(stories, devteam):
     """
 
     """
 
-    if devteam not in ['Front End', 'Backend', 'Test']:
-        print("Error: get_burndown - devteam not in ['Front End', 'Backend', 'Test']")
+    # if devteam not in ['Front End', 'Backend', 'Test']:
+    #     print("Error: get_burndown - devteam not in ['Front End', 'Backend', 'Test']")
 
     raw_data = []
     burndown_data = []
 
     for story in stories:
 
+
+        # print()
+        # print(story['key'])
+        # print(story['issuetype'])
+        # print(story['created'])
+        # print('OE:', story['timeoriginalestimate'], 'TE:', story['timeestimate'], 'TS:', story['timespent'])
+        # subtask_burndown = collect_changes_and_dates(story['changelog'], story['created'], 'timeestimate', story['timeoriginalestimate'])
+        # subtask_burndown = adjust_burndown_startdate(subtask_burndown, story['sprints'][0]['startDate'], story['sprints'][0]['id'])
+        # raw_data.extend(subtask_burndown)
+
         for subtask in story['subtasks']:
-            if subtask['devteam'] == devteam:
+            
+            if subtask['devteam'] != devteam:
+                continue
                 
-                print()
-                print(subtask['key'])
-                print(subtask['devteam'])
-                print(subtask['created'])
-                print('OE:', subtask['aggregatetimeoriginalestimate'], 'TE:', subtask['aggregatetimeestimate'], 'TS:', subtask['aggregatetimespent'])
+            print()
+            print(subtask['key'])
+            print(subtask['devteam'])
+            print(subtask['created'])
+            print('OE:', subtask['aggregatetimeoriginalestimate'], 'TE:', subtask['aggregatetimeestimate'], 'TS:', subtask['aggregatetimespent'])
 
-                
-                subtask_raw_data = collect_changes_and_dates(subtask['changelog'], subtask['created'], 'timeestimate', subtask['aggregatetimeoriginalestimate'])
+            
+            subtask_burndown = collect_changes_and_dates(subtask['changelog'], subtask['created'], 'timeestimate', subtask['aggregatetimeoriginalestimate'])
+            subtask_burndown = adjust_burndown_startdate(subtask_burndown, subtask['sprints'][0]['startDate'], subtask['sprints'][0]['id'])
 
-                subtask_burndown = get_subtask_burndown(subtask_raw_data, subtask['sprints'][0]['startDate'], subtask['sprints'][0]['id'])
-
-                raw_data.extend(subtask_burndown)
+            raw_data.extend(subtask_burndown)
 
     raw_data.sort(key=lambda e: e[0])
     
@@ -455,28 +488,73 @@ def get_burndown(stories, devteam):
     
     print(devteam, 'BURNDOWN SUM:', sum([i[1] for i in raw_data])/(60*60))
 
-    # with open('data.csv', 'w') as f:
-    # 	writer = csv.writer(f)
-    # 	for line in burndown_data:
-    # 		writer.writerow(line)
+    with open('data.csv', 'w') as f:
+    	writer = csv.writer(f)
+    	for line in burndown_data:
+    		writer.writerow(line)
 
     return burndown_data
 
 
-def get_subtask_burndown(subtask_raw_data, sprint_start, sprint_id):
+def collect_changes_and_dates(changelog, issue_created, field, subtask_originalestimate):
+    """
+    important case - if first timeestimate chang e['from'] in changelog is not None, then fist item in burndown data should be from 0 to change['from']
+    with timestamp = issue['created'] timestamp
+
+    """
+    issue_burndown = []
+    first = True
+
+    print('--', 'Filtered changelog items', '--')
+
+    for i, change in enumerate(changelog):
+        
+        if change['field'] == field:
+            
+            if first:
+                first = False
+
+                if change['from'] is not None:
+                    issue_burndown.append([issue_created, int(change['from'])])
+                    print(str(issue_created).ljust(32), str(change['from']).rjust(25))
+
+            issue_burndown.append([change['created'], calc_dif(change['to'], change['from'])])
+            print(str(change['created']).ljust(32), str(change['from']).rjust(6), '->', str(change['to']).ljust(6), '=', str(calc_dif(change['to'], change['from'])).rjust(6))
+
+
+    if len(issue_burndown) == 0 and subtask_originalestimate is not None:
+        issue_burndown.append([issue_created, subtask_originalestimate])
+        print(str(issue_created).ljust(32), 'no changes', subtask_originalestimate)
+
+    if DEBUG['burndown']:
+        print('--', 'Items in issue burndown', '--')
+        for line in issue_burndown:
+            print(str(line[0]).ljust(32), str(line[1]).rjust(7))
+
+    return issue_burndown
+
+
+def adjust_burndown_startdate(subtask_raw_data, sprint_start, sprint_id):
 
     total = 0
     subtask_burndown =[]
 
-    print("-"*5, "Subtask burndown", "-"*5)
-    print("Sprint", str(sprint_id), "start:", str(sprint_start))
+    print("--", "Subtask burndown after date adjustment", "|", "Sprint", str(sprint_id), "start:", str(sprint_start), "--")
 
-    for point in subtask_raw_data:
+    print('-before-')
+
+    for line in subtask_raw_data:
+        print(str(line[0]), line[1])
+
+
+    print('-after-')
+
+    for i, point in enumerate(subtask_raw_data):
         
         if sprint_start > point[0]:
             total += point[1]
 
-            if len(subtask_raw_data) == 1:
+            if i == (len(subtask_raw_data)-1):
                 new_point = [sprint_start, total]
                 subtask_burndown.append(new_point)
 
@@ -492,54 +570,21 @@ def get_subtask_burndown(subtask_raw_data, sprint_start, sprint_id):
             subtask_burndown.append(new_point)
 
 
+
     for line in subtask_burndown:
         print(str(line[0]), line[1])
+
+
+    total_re_before = sum([x[1] for x in subtask_raw_data])
+    total_re_after = sum([x[1] for x in subtask_burndown])
+
+    print('before:', total_re_before, 'after:', total_re_after, total_re_after == total_re_before)
+
+
 
     return subtask_burndown
 
 
-
-        # print('here')
-
-        # if point[1] 
-
-    return ""
-
-
-def collect_changes_and_dates(changelog, issue_created, field, subtask_originalestimate):
-    """
-    important case - if first timeestimate chang e['from'] in changelog is not None, then fist item in burndown data should be from 0 to change['from']
-    with timestamp = issue['created'] timestamp
-
-    """
-    issue_burndown = []
-    first = True
-
-    for i, change in enumerate(changelog):
-        
-        if change['field'] == field:
-            
-            if first:
-                first = False
-
-                if change['from'] is not None:
-                    issue_burndown.append([issue_created, int(change['from'])])
-                    print('-', str(issue_created).ljust(32), str(change['from']).rjust(25))
-
-            issue_burndown.append([change['created'], calc_dif(change['to'], change['from'])])
-            print('-', str(change['created']).ljust(32), str(change['from']).rjust(6), '->', str(change['to']).ljust(6), '=', str(calc_dif(change['to'], change['from'])).rjust(6))
-
-
-    if len(issue_burndown) == 0 and subtask_originalestimate is not None:
-        issue_burndown.append([issue_created, subtask_originalestimate])
-        print('-', str(issue_created).ljust(32), 'no changes', subtask_originalestimate)
-
-    if DEBUG['burndown']:
-        print('issue_burndown')
-        for line in issue_burndown:
-            print(str(line[0]).ljust(32), str(line[1]).rjust(7))
-
-    return issue_burndown
 
 
 def get_burndown_axes(stories):

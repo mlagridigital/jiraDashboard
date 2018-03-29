@@ -8,6 +8,8 @@ def index(sprint_id):
 
 	data = apiRequests.start(sprint_id)
 	backend_burndown = apiRequests.get_burndown(data['stories'], 'Backend')
+	# frontend_burndown = backend_burndown
+	# test_burndown = backend_burndown
 	frontend_burndown = apiRequests.get_burndown(data['stories'], 'Front End')
 	test_burndown = apiRequests.get_burndown(data['stories'], 'Test')
 	haxes_burndown = apiRequests.get_burndown_axes(data['stories'])
