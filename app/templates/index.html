@@ -143,6 +143,11 @@
 				<div id="frontend_burndown_chart" class="chart_div"></div>
 			</div>
 		</div>
+		<div class="row">
+			<div class="col-lg-6">
+				<div id="test_burndown_chart" class="chart_div"></div>
+			</div>
+		</div>
 
 	</div>
 
@@ -199,12 +204,14 @@
 	start_date.setHours(0);
 
 	for(i = 1; i < 14; i++){
-		ticks_list.push({v: new Date(Date.parse(start_date) + i * millieconds_per_day)})
+		ticks_list.push(new Date(Date.parse(start_date) + i * millieconds_per_day))
 	};
 
 	google.charts.load('current', {'packages':['line']});
     google.charts.setOnLoadCallback(drawBackendBurndown);
     google.charts.setOnLoadCallback(drawFrontendBurndown);
+    google.charts.setOnLoadCallback(drawTestBurndown);
+
 
     function drawBackendBurndown() {
 
@@ -223,10 +230,10 @@
       	title: 'Backend subtasks',
       	vAxis: {title: 'Time Estimate [Hours]'},
       	hAxis: {
-      		// viewWindow: {
-      		// 	min: new Date('{{ stories[0]['sprints'][0]['startDate'] }}'),
-      		// 	max: new Date('{{ stories[0]['sprints'][0]['endDate'] }}'),
-      		// },
+      		viewWindow: {
+      			min: new Date('{{ stories[0]['sprints'][0]['startDate'] }}'),
+      			max: new Date('{{ stories[0]['sprints'][0]['endDate'] }}'),
+      		},
       		format: 'MMM d',
       	},
       	legend: {position: 'none'},
@@ -257,11 +264,13 @@
       	title: 'Front End subtasks',
       	vAxis: {title: 'Time Estimate [Hours]'},
       	hAxis: {
-      		// viewWindow: {
-      		// 	min: new Date('{{ stories[0]['sprints'][0]['startDate'] }}'),
-      		// 	max: new Date('{{ stories[0]['sprints'][0]['endDate'] }}'),
-      		// },
+      		viewWindow: {
+      			min: new Date('{{ stories[0]['sprints'][0]['startDate'] }}'),
+      			max: new Date('{{ stories[0]['sprints'][0]['endDate'] }}'),
+      		},
       		format: 'MMM d hh:mm',
+      		ticks: ticks_list,
+
         },
         vAxis: {
         	gridlines: {
@@ -275,6 +284,48 @@
       };
 
       var chart = new google.charts.Line(document.getElementById('frontend_burndown_chart'));
+
+      chart.draw(data, google.charts.Line.convertOptions(options));
+    }
+
+    function drawTestBurndown() {
+
+      var data = new google.visualization.DataTable(
+      	{
+      		cols: [{id: 'datetime', label: 'Time', type: 'date'},
+	      	       {id: 'timeestimate', label: 'Time Estimate', type: 'number'},
+	      	       {role: 'tooltip', label:'Key', type: 'string'},
+	      	       ],
+	      	rows: [{% for d in  test_burndown %}{c: [{v: new Date('{{ d[0] }}')}, {v: {{ d[1] / (60 * 60) }}}, {v: '{{ d[2] }}'}]},
+	      		{% endfor %}]
+      	});
+
+      // data.addRows();
+
+      var options = {
+      	title: 'Test subtasks',
+      	vAxis: {title: 'Time Estimate [Hours]'},
+      	hAxis: {
+      		viewWindow: {
+      			min: new Date('{{ stories[0]['sprints'][0]['startDate'] }}'),
+      			max: new Date('{{ stories[0]['sprints'][0]['endDate'] }}'),
+      		},
+      		format: 'MMM d hh:mm',
+      		ticks: ticks_list,
+
+        },
+        vAxis: {
+        	gridlines: {
+        		count: 3,
+        	}
+        },
+      	legend: {position: 'none'},
+      	series: {0: { color: '#e2431e'}},
+      	height: 500,
+      	width: 550,
+      };
+
+      var chart = new google.charts.Line(document.getElementById('test_burndown_chart'));
 
       chart.draw(data, google.charts.Line.convertOptions(options));
     }

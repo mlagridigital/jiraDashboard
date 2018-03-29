@@ -168,6 +168,7 @@ def format_data(stories, subtasks):
         }
 
         print('DateCreated:', newStory['created'], '|', 'Sprint', newStory['sprints'][0]['id'], 'start:', newStory['sprints'][0]['startDate'])
+        print('Sprints:', [i['id'] for i in newStory['sprints']])
         # print('SPRINTS:', json.dumps(newStory['sprints'], indent = 4))
 
         # print(format_sprints(issue['fields']['customfield_10016']))
@@ -215,6 +216,7 @@ def format_data(stories, subtasks):
                               newSubtask['key'], "not set to team")
 
                     print('DateCreated:', dateutil.parser.parse(issue['fields']['created']), '|', 'Sprint', newSubtask['sprints'][0]['id'], 'start:', newSubtask['sprints'][0]['startDate'])
+                    print('Sprints:', [i['id'] for i in newSubtask['sprints']])
                     # print('SPRINTS:', json.dumps(newSubtask['sprints'], indent = 4))
                     # print(json.dumps(newSubtask, indent = 4))
                     newStory['subtasks'].append(newSubtask)
@@ -435,7 +437,7 @@ def get_burndown(stories, devteam):
                 
                 subtask_raw_data = collect_changes_and_dates(subtask['changelog'], subtask['created'], 'timeestimate', subtask['aggregatetimeoriginalestimate'])
 
-                subtask_burndown = get_subtask_burndown(subtask_raw_data, story['sprints'][0]['startDate'])
+                subtask_burndown = get_subtask_burndown(subtask_raw_data, subtask['sprints'][0]['startDate'], subtask['sprints'][0]['id'])
 
                 raw_data.extend(subtask_burndown)
 
@@ -450,6 +452,9 @@ def get_burndown(stories, devteam):
         total += line[1]
         burndown_data.append([line[0], total])
 
+    
+    print(devteam, 'BURNDOWN SUM:', sum([i[1] for i in raw_data])/(60*60))
+
     # with open('data.csv', 'w') as f:
     # 	writer = csv.writer(f)
     # 	for line in burndown_data:
@@ -458,13 +463,13 @@ def get_burndown(stories, devteam):
     return burndown_data
 
 
-def get_subtask_burndown(subtask_raw_data, sprint_start):
+def get_subtask_burndown(subtask_raw_data, sprint_start, sprint_id):
 
     total = 0
     subtask_burndown =[]
 
     print("-"*5, "Subtask burndown", "-"*5)
-    print("Sprint start:", str(sprint_start))
+    print("Sprint", str(sprint_id), "start:", str(sprint_start))
 
     for point in subtask_raw_data:
         
@@ -555,7 +560,7 @@ def start(sprint):
         'burndown': True,
     }
 
-    OFFLINE_MODE = True
+    OFFLINE_MODE = False
 
     if OFFLINE_MODE:
         with open('stories.pkl', 'rb') as f:
