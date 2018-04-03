@@ -69,6 +69,12 @@ td.cell_status_count {
 }
 
 td.cell_progress {
+	vertical-align: middle;
+}
+
+.cell_progress_percentage {
+	vertical-align: center;
+	text-align: : right;
 }
 
 .progress {
@@ -91,10 +97,6 @@ th.cell_summary, td.cell_summary {
 	}
 }
 
-.progess_percentage {
-	vertical-align: middle;
-	text-align: : center;
-}
 
 .chart_div {
 	display: block;
@@ -102,4 +104,39 @@ th.cell_summary, td.cell_summary {
     margin-right: auto;
 }
 
+.traffic_light {
+  height: 25px;
+  width: 25px;
+  border-radius: 50%;
+  display: inline-block;
+  border-style: solid;
+  border-width: 1px;
+}
+
+.traffic_light_green {
+	background-color: #b0f36d;
+	border-color: #8cee2b;
+}
+
+.traffic_light_amber {
+	background-color: #f3f36d;
+	border-color: #eeee2b;
+}
+
+.traffic_light_red {
+	background-color: #f36d6d;
+	border-color: #ee2b2b;
+}
+
+.cell_TEvsOE {
+	display: none;
+}
+
+th.cell_TEvsOE {
+	text-align: center;
+}
+
+td.cell_TEvsOE {
+	text-align: right;
+}
 

@@ -44,7 +44,9 @@
 			</div>
 			<div class="col-lg-6" align="right">
 				<button id="table_expand_all" type="button" class="btn btn-success btn-expand_all">Expand All</button>
+				<button id="table_TEvsOE" type="button" class="btn btn-success btn-show_TEvsOE">Show TE vs OE</button>
 			</div>
+				
 		</div>
 		
 		<br>
@@ -62,13 +64,14 @@
 						<th>Original Estimate</th>
 						<th>Time Spent</th>
 						<th>Remaining Time</th>
-						<th>Progress</th>
-						<th></th>
+						<th colspan="2">Progress</th>
+						<th class="cell_TEvsOE" colspan="3">Time Spent vs Original Estimate</th>
 						<th>To Do </th>
 						<th>In Dev</th>
 						<th>DevRev</th>
 						<th>Aw UAT</th>
 						<th>Done  </th>
+						
 					</tr>
 				</thead>
 				<tbody>
@@ -85,12 +88,16 @@
 							<td class="cell_time" actual="{{ issue.aggregatetimespent }}">{% if issue.aggregatetimespent != None %}{{ issue.aggregatetimespent_str }}{% endif %}</td>
 							<td class="cell_time" actual="{{ issue.aggregatetimeestimate }}">{% if issue.aggregatetimeestimate != None %}{{ issue.aggregatetimeestimate_str }}{% endif %}</td>
 							<td class="cell_progress_percentage">{% if issue.progress != None %}{{ issue.progress }}%{% endif %}</td>
-							<td class="cell_progress"><div class="progress" style="height: 10px; width: 100%"><div class="progress-bar" style="height: 10px; width: {{ issue.progress }}%"></div></div></td>						
+							<td class="cell_progress"><div class="progress" style="height: 10px; width: 100%"><div class="progress-bar" style="height: 10px; width: {{ issue.progress }}%"></div></div></td>
+							<td class="cell_TEvsOE" actual="{{ issue.TEvsOE.value }}">{% if issue.TEvsOE.value != None %}{{ issue.TEvsOE.rendered }}{% endif %}</td>
+							<td class="cell_TEvsOE">{% if issue.TEvsOE.value != None %}{{ issue.TEvsOE.percentage }}%{% endif %}</td>
+							<td class="cell_TEvsOE" align="center">{% if issue.TEvsOE.value != None %}<span class="traffic_light traffic_light_{{ issue.TEvsOE.traffic_light }}"></span>{% endif %}</td>
 							<td class="cell_status_count">{% if issue.subtask_status_count['To Do'] > 0 %}{{ issue.subtask_status_count['To Do'] }}{% endif %}</td>
 							<td class="cell_status_count">{% if issue.subtask_status_count['Dev In Progress'] > 0 %}{{ issue.subtask_status_count['Dev In Progress'] }}{% endif %}</td>
 							<td class="cell_status_count">{% if issue.subtask_status_count['Dev Review'] > 0 %}{{ issue.subtask_status_count['Dev Review'] }}{% endif %}</td>
 							<td class="cell_status_count">{% if issue.subtask_status_count['Awaiting UAT'] > 0 %}{{ issue.subtask_status_count['Awaiting UAT'] }}{% endif %}</td>
 							<td class="cell_status_count">{% if issue.subtask_status_count['Done'] > 0 %}{{ issue.subtask_status_count['Done'] }}{% endif %}</td>
+							
 
 							{% if issue.subtasks|length > 0 %}
 
@@ -109,11 +116,15 @@
 										<td class="cell_time" actual="{{ subtask.aggregatetimeestimate }}">{% if subtask.aggregatetimeestimate != None %}{{ subtask.aggregatetimeestimate_str }}{% endif %}</td>
 										<td class="cell_progress_percentage">{% if subtask.progress != None %}{{ subtask.progress }}%{% endif %}</td>
 										<td class="cell_progress"><div class="progress" style="height: 10px; width: 100%"><div class="progress-bar bg-warning" style="height: 10px; width: {{ subtask.progress }}%"></div></div></td>
+										<td class="cell_TEvsOE" actual="{{ subtask.TEvsOE.value }}">{% if subtask.TEvsOE.value != None %}{{ subtask.TEvsOE.rendered }}{% endif %}</td>
+										<td class="cell_TEvsOE">{% if subtask.TEvsOE.value != None %}{{ subtask.TEvsOE.percentage }}%{% endif %}</td>
+										<td class="cell_TEvsOE" align="center">{% if subtask.TEvsOE.value != None %}<span class="traffic_light traffic_light_{{ subtask.TEvsOE.traffic_light }}"></span>{% endif %}</td>
 										<td class="cell_status_count">{% if subtask.status == 'To Do' %}*{% endif %}</td>
 										<td class="cell_status_count">{% if subtask.status == 'Dev In Progress' %}*{% endif %}</td>
 										<td class="cell_status_count">{% if subtask.status == 'Dev Review' %}*{% endif %}</td>
 										<td class="cell_status_count">{% if subtask.status == 'Awaiting UAT' %}*{% endif %}</td>
 										<td class="cell_status_count">{% if subtask.status == 'Done' %}*{% endif %}</td>
+										
 									</tr>
 
 								{% endfor %}
@@ -181,12 +192,35 @@
 	
 	$('div.row').on('click', 'button.btn-collapse_all', function(event){
 		$('tr.row_subtask').attr("style", "display: none;");
-		$(this).addClass("btn-success");
 		$(this).removeClass("btn-warning");
-		$(this).addClass("btn-expand_all");
+		$(this).addClass("btn-success");
 		$(this).removeClass("btn-collapse_all");
+		$(this).addClass("btn-expand_all");
 		$(this).text("Expand All");
 	})
+
+	$('div.row').on('click', 'button.btn-show_TEvsOE', function(event){
+		$('td.cell_TEvsOE').show();
+		$('th.cell_TEvsOE').show();
+		$(this).removeClass("btn-success");
+		$(this).addClass("btn-warning");
+		$(this).removeClass("btn-show_TEvsOE");
+		$(this).addClass("btn-hide_TEvsOE");
+		$(this).text("Hide TE vs OE");
+	})
+
+	$('div.row').on('click', 'button.btn-hide_TEvsOE', function(event){
+		$('td.cell_TEvsOE').attr("style", "display: none;");
+		$('th.cell_TEvsOE').attr("style", "display: none;");
+		$(this).removeClass("btn-warning");
+		$(this).addClass("btn-success");
+		$(this).removeClass("btn-hide_TEvsOE");
+		$(this).addClass("btn-show_TEvsOE");
+		$(this).text("Show TE vs OE");
+	})
+
+
+
 
 	// $(document).ready(function(){
 	// 	$('#sprint_input').attr('value', window.location.pathname.slice(8,10));

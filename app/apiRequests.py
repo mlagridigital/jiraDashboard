@@ -5,7 +5,6 @@ import csv
 from datetime import timedelta
 import pickle
 
-
 def get_issues(sprint, search=None):
     # """
     # TODO -  Check data retrival at edge cases. Total == Max Results
@@ -27,7 +26,7 @@ def get_issues(sprint, search=None):
             "jql": "project = ADS AND sprint = " + str(sprint) + " AND type in subtaskIssueTypes()",
             "maxResults": "100",
             "startAt": 0,
-            "fields": "status, issuetype, summary, aggregatetimespent, aggregatetimeoriginalestimate, aggregatetimeestimate, customfield_10016, assignee, created",
+            "fields": "status, issuetype, summary, aggregatetimespent, aggregatetimeoriginalestimate, aggregatetimeestimate, customfield_10016, assignee, created, timespent, timeoriginalestimate, timeestimate",
             "expand": "changelog",
         }
     else:
@@ -75,6 +74,8 @@ def get_issues(sprint, search=None):
 
     return parsed['issues']
 
+
+# ------------------ FORMAT ISSUES ------------------ #
 
 def format_data(stories, subtasks):
     """
@@ -145,20 +146,30 @@ def format_data(stories, subtasks):
             "key": issue['key'],
             "summary": issue['fields']['summary'],
             "self": "https://fullprofile.atlassian.net/browse/" + issue['key'],
+            "created": dateutil.parser.parse(issue['fields']['created']),
+            "isSubtask" : False,
             "status": issue['fields']['status']['name'],
             "issuetype": issue['fields']['issuetype']['name'],
             "issuetypeIcon": issue['fields']['issuetype']['iconUrl'],
+            
             "timespent": issue['fields']['timespent'],
             "timeoriginalestimate": issue['fields']['timeoriginalestimate'],
             "timeestimate": issue['fields']['timeestimate'],
+            
             "aggregatetimespent": issue['fields']['aggregatetimespent'],
             "aggregatetimeoriginalestimate": issue['fields']['aggregatetimeoriginalestimate'],
             "aggregatetimeestimate": issue['fields']['aggregatetimeestimate'],
             "aggregatetimespent_str": format_time(issue['fields']['aggregatetimespent']),
             "aggregatetimeoriginalestimate_str": format_time(issue['fields']['aggregatetimeoriginalestimate']),
             "aggregatetimeestimate_str": format_time(issue['fields']['aggregatetimeestimate']),
+            
+            "sprints": format_sprints(issue['fields']['customfield_10016']),
+            "assignee": format_assignee(issue['fields']['assignee']),
+            "changelog": format_changelog(issue['changelog']),
+
             "progress": calc_progress(issue['fields']['aggregatetimeoriginalestimate'], issue['fields']['aggregatetimeestimate']),
-            "isSubtask" : False,
+            "TEvsOE": timespent_vs_originalestimate(issue['fields']['aggregatetimeoriginalestimate'], issue['fields']['aggregatetimespent']),
+
             "subtasks": [],
             "subtask_status_count": {
                 "To Do": 0,
@@ -167,11 +178,7 @@ def format_data(stories, subtasks):
                 "Awaiting UAT": 0,
                 "Done": 0,
                 "Reopened": 0,
-            },
-            "sprints": format_sprints(issue['fields']['customfield_10016']),
-            "assignee": format_assignee(issue['fields']['assignee']),
-            "changelog": format_changelog(issue['changelog']),
-            "created": dateutil.parser.parse(issue['fields']['created']),
+            },   
         }
 
         print('DateCreated:', newStory['created'], '|', 'Sprint', newStory['sprints'][0]['id'], 'start:', newStory['sprints'][0]['startDate'])
@@ -184,6 +191,7 @@ def format_data(stories, subtasks):
 
             for s in subtasks:
                 if s['id'] == subtask['id']:
+
                     print("-" * 4)
                     print("Subtask key", subtask['key'])
                     print("Subtask type:", s['fields']['issuetype']['name'])
@@ -195,24 +203,46 @@ def format_data(stories, subtasks):
                         "key": s['key'],
                         "summary": s['fields']['summary'],
                         "self": "https://fullprofile.atlassian.net/browse/" + s['key'],
+                        "created": dateutil.parser.parse(s['fields']['created']),
+                        "isSubtask" : True,
                         "status": s['fields']['status']['name'],
-                        "devteam": "",
+                        
                         "issuetype": s['fields']['issuetype']['name'],
                         "issuetypeIcon": s['fields']['issuetype']['iconUrl'],
+                        
+                        "timespent": s['fields']['timespent'],
+                        "timeoriginalestimate": s['fields']['timeoriginalestimate'],
+                        "timeestimate": s['fields']['timeestimate'],
+
                         "aggregatetimespent": s['fields']['aggregatetimespent'],
                         "aggregatetimeoriginalestimate": s['fields']['aggregatetimeoriginalestimate'],
                         "aggregatetimeestimate": s['fields']['aggregatetimeestimate'],
                         "aggregatetimespent_str": format_time(s['fields']['aggregatetimespent']),
                         "aggregatetimeoriginalestimate_str": format_time(s['fields']['aggregatetimeoriginalestimate']),
                         "aggregatetimeestimate_str": format_time(s['fields']['aggregatetimeestimate']),
-                        "progress": calc_progress(s['fields']['aggregatetimeoriginalestimate'], s['fields']['aggregatetimeestimate']),
+
                         "sprints": format_sprints(s['fields']['customfield_10016']),
                         "assignee": format_assignee(s['fields']['assignee']),
                         "changelog": format_changelog(s['changelog']),
-                        "created": dateutil.parser.parse(s['fields']['created']),
-                        "isSubtask" : True,
+
+                        "devteam": "",
+
+                        "progress": calc_progress(s['fields']['timeoriginalestimate'], s['fields']['timeestimate']),
+                        "TEvsOE": timespent_vs_originalestimate(s['fields']['timeoriginalestimate'], s['fields']['timespent']),
+
                     }
 
+
+                    # SANITY CHECK
+                    if s['fields']['aggregatetimeestimate'] != s['fields']['timeestimate']:
+                        print("ERROR: SANITY CHECK [format_data] aggregatetimeestimate != timeestimate")
+                    if s['fields']['aggregatetimespent'] != s['fields']['timespent']:
+                        print("ERROR: [format_data] aggregatetimespent != timespent")
+                    if s['fields']['aggregatetimeoriginalestimate'] != s['fields']['timeoriginalestimate']:
+                        print("ERROR: [format_data] aggregatetimeoriginalestimate != timeoriginalestimate")
+
+
+                    # For each subtask associate the devteam from the subtask summary
                     if newSubtask['summary'].upper().startswith(("BACK", "API", "PERI"), 1):
                         newSubtask['devteam'] = "Backend"
                     elif newSubtask['summary'].upper().startswith("FRONT", 1):
@@ -262,6 +292,8 @@ def format_time(time):
         print("Error time is not int, time is:", time)
         return time
 
+    time = abs(time)
+
     days_per_week = 5
     hours_per_day = 8
 
@@ -275,27 +307,9 @@ def format_time(time):
 
     lst = [str(x) + units[i] for i, x in enumerate(values) if x > 0]
 
-    return " ".join(lst)
+    rendered_time = (" ".join(lst))
 
-
-def calc_progress(original_estimate, remaining_time):
-
-    if isinstance(original_estimate, int):
-        if isinstance(remaining_time, int):
-
-            if original_estimate == 0:
-                print("ZeroError: original_estimate == 0")
-                return None
-
-            progess = round(
-                ((original_estimate - remaining_time) / original_estimate) * 100)
-            #print("Progres:", progess)
-            return progess
-
-    else:
-        print(
-            "Error calculating progress as time not int, time: [OE:", original_estimate, ", RE:", remaining_time, "]")
-        return None
+    return rendered_time
 
 
 def format_sprints(sprints):
@@ -417,6 +431,60 @@ def is_item_in_prev_change(item, prev_change):
     return False
 
 
+def calc_progress(originalestimate, timeestimate):
+    """
+    Calcluate the percentage diffrence between originalestimate and timeesstimate
+
+    If either inputs are None return None. If originalestimate == 0 return None
+
+    """
+
+    if isinstance(originalestimate, int) and isinstance(timeestimate, int):
+        
+        if originalestimate == 0:
+            print("ERROR: [calc_progress] - ZeroError, originalestimate == 0")
+            return None
+        else:
+            progess = round(((originalestimate - timeestimate) / originalestimate) * 100)
+            return progess
+
+    else:
+        print("ERROR: [calc_progress] - Time not int [OE:", originalestimate, ", TE:", timeestimate, "]")
+        return None
+
+
+def timespent_vs_originalestimate(originalestimate, timespent):
+    """
+    Calcluate the difference between originalestimate and actual timespent. 
+
+    If either inputs are None return None.
+
+    """
+
+    if isinstance(originalestimate, int) and isinstance(timespent, int):
+        difference = originalestimate - timespent
+        precentage = -calc_progress(originalestimate, timespent)
+
+    else:
+        print("ERROR: [timespent_vs_originalestimate] - Time not int [OE:", originalestimate, ", TE:", timespent, "]")
+        difference = None
+        precentage = None
+
+    return {'value': difference, 'rendered': format_time(difference), 'percentage': precentage, 'traffic_light': traffic_light(precentage)}
+
+
+def traffic_light(percentage):
+
+    if percentage == None:
+        return None
+    elif abs(percentage) <= 10:
+        return 'green'
+    elif abs(percentage) <= 50:
+        return 'amber'
+    else:
+        return 'red'
+
+
 def calc_dif(to, _from):
 
     if to is None:
@@ -429,8 +497,11 @@ def calc_dif(to, _from):
     return dif
 
 
+# ------------------ BURNDOWN ------------------ #
+
 
 def filter_burndown(burndown, issueType):
+
     pass
 
 
@@ -447,15 +518,15 @@ def get_burndown(stories, devteam):
 
     for story in stories:
 
-
-        # print()
-        # print(story['key'])
-        # print(story['issuetype'])
-        # print(story['created'])
-        # print('OE:', story['timeoriginalestimate'], 'TE:', story['timeestimate'], 'TS:', story['timespent'])
-        # subtask_burndown = collect_changes_and_dates(story['changelog'], story['created'], 'timeestimate', story['timeoriginalestimate'])
-        # subtask_burndown = adjust_burndown_startdate(subtask_burndown, story['sprints'][0]['startDate'], story['sprints'][0]['id'])
-        # raw_data.extend(subtask_burndown)
+        # if devteam == "total_burndown":
+            # print()
+            # print(story['key'])
+            # print(story['issuetype'])
+            # print(story['created'])
+            # print('OE:', story['timeoriginalestimate'], 'TE:', story['timeestimate'], 'TS:', story['timespent'])
+            # subtask_burndown = collect_changes_and_dates(story['changelog'], story['created'], 'timeestimate', story['timeoriginalestimate'])
+            # subtask_burndown = adjust_burndown_startdate(subtask_burndown, story['sprints'][0]['startDate'], story['sprints'][0]['id'])
+            # raw_data.extend(subtask_burndown)
 
         for subtask in story['subtasks']:
             
@@ -570,7 +641,6 @@ def adjust_burndown_startdate(subtask_raw_data, sprint_start, sprint_id):
             subtask_burndown.append(new_point)
 
 
-
     for line in subtask_burndown:
         print(str(line[0]), line[1])
 
@@ -580,11 +650,17 @@ def adjust_burndown_startdate(subtask_raw_data, sprint_start, sprint_id):
 
     print('before:', total_re_before, 'after:', total_re_after, total_re_after == total_re_before)
 
-
-
     return subtask_burndown
 
 
+def get_startdate(story, issue):
+    """
+    The startDate of an Issue burndown should be:
+        1) If the story has been moved mid sprint; the date that the sprint was moved
+        2) If the issue was created after the sprint start or after 1) then it should be the created date
+        3) Else it should be the start date of the sprint
+    """
+    pass
 
 
 def get_burndown_axes(stories):
@@ -593,6 +669,11 @@ def get_burndown_axes(stories):
     end_date = stories[0]['sprints'][0]['endDate']
     pass
 
+
+# ------------------ RETRO ------------------ #
+
+
+# ------------------ SETUP ------------------ #
 
 def start(sprint):
 
@@ -605,7 +686,7 @@ def start(sprint):
         'burndown': True,
     }
 
-    OFFLINE_MODE = False
+    OFFLINE_MODE = True
 
     if OFFLINE_MODE:
         with open('stories.pkl', 'rb') as f:
