@@ -91,7 +91,7 @@
 							<td class="cell_progress"><div class="progress" style="height: 10px; width: 100%"><div class="progress-bar" style="height: 10px; width: {{ issue.progress }}%"></div></div></td>
 							<td class="cell_TEvsOE" actual="{{ issue.TEvsOE.value }}">{% if issue.TEvsOE.value != None %}{{ issue.TEvsOE.rendered }}{% endif %}</td>
 							<td class="cell_TEvsOE">{% if issue.TEvsOE.value != None %}{{ issue.TEvsOE.percentage }}%{% endif %}</td>
-							<td class="cell_TEvsOE" align="center">{% if issue.TEvsOE.value != None %}<span class="traffic_light traffic_light_{{ issue.TEvsOE.traffic_light }}"></span>{% endif %}</td>
+							<td class="cell_TEvsOE" align="center">{% if issue.TEvsOE.traffic_light != None %}<span class="traffic_light traffic_light_{{ issue.TEvsOE.traffic_light }}"></span>{% endif %}</td>
 							<td class="cell_status_count">{% if issue.subtask_status_count['To Do'] > 0 %}{{ issue.subtask_status_count['To Do'] }}{% endif %}</td>
 							<td class="cell_status_count">{% if issue.subtask_status_count['Dev In Progress'] > 0 %}{{ issue.subtask_status_count['Dev In Progress'] }}{% endif %}</td>
 							<td class="cell_status_count">{% if issue.subtask_status_count['Dev Review'] > 0 %}{{ issue.subtask_status_count['Dev Review'] }}{% endif %}</td>
@@ -118,7 +118,7 @@
 										<td class="cell_progress"><div class="progress" style="height: 10px; width: 100%"><div class="progress-bar bg-warning" style="height: 10px; width: {{ subtask.progress }}%"></div></div></td>
 										<td class="cell_TEvsOE" actual="{{ subtask.TEvsOE.value }}">{% if subtask.TEvsOE.value != None %}{{ subtask.TEvsOE.rendered }}{% endif %}</td>
 										<td class="cell_TEvsOE">{% if subtask.TEvsOE.value != None %}{{ subtask.TEvsOE.percentage }}%{% endif %}</td>
-										<td class="cell_TEvsOE" align="center">{% if subtask.TEvsOE.value != None %}<span class="traffic_light traffic_light_{{ subtask.TEvsOE.traffic_light }}"></span>{% endif %}</td>
+										<td class="cell_TEvsOE" align="center">{% if subtask.TEvsOE.traffic_light != None %}<span class="traffic_light traffic_light_{{ subtask.TEvsOE.traffic_light }}"></span>{% endif %}</td>
 										<td class="cell_status_count">{% if subtask.status == 'To Do' %}*{% endif %}</td>
 										<td class="cell_status_count">{% if subtask.status == 'Dev In Progress' %}*{% endif %}</td>
 										<td class="cell_status_count">{% if subtask.status == 'Dev Review' %}*{% endif %}</td>
@@ -146,17 +146,15 @@
 
 		<br>
 
-		<div class="row">
-			<div class="col-lg-6">
-				<div id="backend_burndown_chart" class="chart_div"></div>
+		<div class="row justify-content-center">
+			<div class="col-xs-4 chart_div">
+				<div id="backend_burndown_chart" class=""></div>
 			</div>
-			<div class="col-lg-6">
-				<div id="frontend_burndown_chart" class="chart_div"></div>
+			<div class="col-xs-4 chart_div">
+				<div id="frontend_burndown_chart" class=""></div>
 			</div>
-		</div>
-		<div class="row">
-			<div class="col-lg-6">
-				<div id="test_burndown_chart" class="chart_div"></div>
+			<div class="col-xs-4 chart_div">
+				<div id="test_burndown_chart" class=""></div>
 			</div>
 		</div>
 
@@ -296,7 +294,6 @@
 
       var options = {
       	title: 'Front End subtasks',
-      	vAxis: {title: 'Time Estimate [Hours]'},
       	hAxis: {
       		viewWindow: {
       			min: new Date('{{ stories[0]['sprints'][0]['startDate'] }}'),
@@ -307,9 +304,7 @@
 
         },
         vAxis: {
-        	gridlines: {
-        		count: 3,
-        	}
+        	title: 'Time Estimate [Hours]',
         },
       	legend: {position: 'none'},
       	series: {0: { color: '#e2431e'}},
@@ -338,7 +333,6 @@
 
       var options = {
       	title: 'Test subtasks',
-      	vAxis: {title: 'Time Estimate [Hours]'},
       	hAxis: {
       		viewWindow: {
       			min: new Date('{{ stories[0]['sprints'][0]['startDate'] }}'),
@@ -349,12 +343,10 @@
 
         },
         vAxis: {
-        	gridlines: {
-        		count: 3,
-        	}
+			title: 'Time Estimate [Hours]',
         },
       	legend: {position: 'none'},
-      	series: {0: { color: '#e2431e'}},
+      	series: {0: { color: '#f1ca3a'}},
       	height: 500,
       	width: 550,
       };

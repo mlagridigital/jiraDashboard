@@ -168,7 +168,7 @@ def format_data(stories, subtasks):
             "changelog": format_changelog(issue['changelog']),
 
             "progress": calc_progress(issue['fields']['aggregatetimeoriginalestimate'], issue['fields']['aggregatetimeestimate']),
-            "TEvsOE": timespent_vs_originalestimate(issue['fields']['aggregatetimeoriginalestimate'], issue['fields']['aggregatetimespent']),
+            "TEvsOE": timespent_vs_originalestimate(issue['fields']['aggregatetimeoriginalestimate'], issue['fields']['aggregatetimespent'], issue['fields']['status']['name']),
 
             "subtasks": [],
             "subtask_status_count": {
@@ -228,7 +228,7 @@ def format_data(stories, subtasks):
                         "devteam": "",
 
                         "progress": calc_progress(s['fields']['timeoriginalestimate'], s['fields']['timeestimate']),
-                        "TEvsOE": timespent_vs_originalestimate(s['fields']['timeoriginalestimate'], s['fields']['timespent']),
+                        "TEvsOE": timespent_vs_originalestimate(s['fields']['timeoriginalestimate'], s['fields']['timespent'], s['fields']['status']['name']),
 
                     }
 
@@ -453,7 +453,7 @@ def calc_progress(originalestimate, timeestimate):
         return None
 
 
-def timespent_vs_originalestimate(originalestimate, timespent):
+def timespent_vs_originalestimate(originalestimate, timespent, status):
     """
     Calcluate the difference between originalestimate and actual timespent. 
 
@@ -463,23 +463,34 @@ def timespent_vs_originalestimate(originalestimate, timespent):
 
     if isinstance(originalestimate, int) and isinstance(timespent, int):
         difference = originalestimate - timespent
-        precentage = -calc_progress(originalestimate, timespent)
+        precentage = calc_progress(originalestimate, timespent)
+
+        if precentage is not None:
+            precentage = -1 * precentage
 
     else:
         print("ERROR: [timespent_vs_originalestimate] - Time not int [OE:", originalestimate, ", TE:", timespent, "]")
         difference = None
         precentage = None
 
-    return {'value': difference, 'rendered': format_time(difference), 'percentage': precentage, 'traffic_light': traffic_light(precentage)}
+
+    if status == 'Done':
+        tl = traffic_light(precentage)
+    else:
+        tl = 'inProgress'
+
+    return {'value': difference, 'rendered': format_time(difference), 'percentage': precentage, 'traffic_light': tl}
 
 
 def traffic_light(percentage):
 
     if percentage == None:
         return None
-    elif abs(percentage) <= 10:
+    elif percentage < 0:
+        return 'blue'
+    elif percentage <= 10:
         return 'green'
-    elif abs(percentage) <= 50:
+    elif percentage <= 50:
         return 'amber'
     else:
         return 'red'

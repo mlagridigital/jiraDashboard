@@ -97,13 +97,6 @@ th.cell_summary, td.cell_summary {
 	}
 }
 
-
-.chart_div {
-	display: block;
-	margin-left: auto;
-    margin-right: auto;
-}
-
 .traffic_light {
   height: 25px;
   width: 25px;
@@ -128,6 +121,17 @@ th.cell_summary, td.cell_summary {
 	border-color: #ee2b2b;
 }
 
+.traffic_light_blue {
+	background-color: #6db0f3;
+	border-color: #2b8cee;
+
+}
+
+.traffic_light_inProgress {
+	background-color: #cccccc;
+	border-color: #8c8c8c;
+}
+
 .cell_TEvsOE {
 	display: none;
 }
@@ -138,5 +142,13 @@ th.cell_TEvsOE {
 
 td.cell_TEvsOE {
 	text-align: right;
+}
+
+
+.chart_div {
+	display: block;
+	margin-left: auto;
+    margin-right: auto;
+    text-align: center;
 }
 
