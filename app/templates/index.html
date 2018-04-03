@@ -43,7 +43,7 @@
 				<h3>Sprint Stories</h3>
 			</div>
 			<div class="col-lg-6" align="right">
-				<button id="table_expand_all" type="button" class="btn btn-success btn-expand_all">Expand All</button>
+				<button id="table_expand_all" type="button" class="btn btn-success btn-expand_all">Expand Subtasks</button>
 				<button id="table_TEvsOE" type="button" class="btn btn-success btn-show_TEvsOE">Show TE vs OE</button>
 			</div>
 				
@@ -65,7 +65,7 @@
 						<th>Time Spent</th>
 						<th>Remaining Time</th>
 						<th colspan="2">Progress</th>
-						<th class="cell_TEvsOE" colspan="3">Time Spent vs Original Estimate</th>
+						<th class="cell_TEvsOE" colspan="3">TS vs OE</th>
 						<th>To Do </th>
 						<th>In Dev</th>
 						<th>DevRev</th>
@@ -185,7 +185,7 @@
 		$(this).addClass("btn-warning");
 		$(this).removeClass("btn-expand_all");
 		$(this).addClass("btn-collapse_all");
-		$(this).text("Collapse All");
+		$(this).text("Collapse Subtasks");
 	})
 	
 	$('div.row').on('click', 'button.btn-collapse_all', function(event){
@@ -194,7 +194,7 @@
 		$(this).addClass("btn-success");
 		$(this).removeClass("btn-collapse_all");
 		$(this).addClass("btn-expand_all");
-		$(this).text("Expand All");
+		$(this).text("Expand Subtasks");
 	})
 
 	$('div.row').on('click', 'button.btn-show_TEvsOE', function(event){
