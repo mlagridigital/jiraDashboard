@@ -180,6 +180,7 @@
 						{% for key in defects['defects_total_count'] %}
 						<th>{{ key }}</th>
 						{% endfor %}
+						<th>Total Time Spent</th>
 					</tr>
 				</thead>
 
@@ -190,6 +191,7 @@
 						{% for key in defects['defects_total_count'] %}
 						<td>{% if key in story['subtask_rootcauses'] %}{{ story['subtask_rootcauses'][key] }}{% else %}{% endif %}</td>
 						{% endfor %}
+						<td style="text-align: right">{{ story['timespent_on_defects_rendered'] }}</td>
 					</tr>
 					{% endfor %}
 				</tbody>
@@ -201,6 +203,7 @@
 						{% for key, item in defects['defects_total_count'].items() %}
 						<th key="{{ key }}">{{ item }}</th>
 						{% endfor %}
+						<th></th>
 					</tr>
 				</tfoot>
 				

@@ -709,6 +709,7 @@ def get_defects(stories):
                 'self': s['self'],
                 'subtask_rootcauses': s['subtask_rootcauses'],
                 'timespent_on_defects': s['subtask_rootcauses_timespent'],
+                'timespent_on_defects_rendered': format_time(s['subtask_rootcauses_timespent']),
             }
 
             stories_with_defects.append(story_with_defect)
@@ -738,7 +739,7 @@ def start(sprint):
         'burndown': True,
     }
 
-    OFFLINE_MODE = True
+    OFFLINE_MODE = False
 
     if OFFLINE_MODE:
         with open('stories.pkl', 'rb') as f:
