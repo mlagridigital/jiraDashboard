@@ -4,6 +4,7 @@ import dateutil.parser
 import csv
 from datetime import timedelta
 import pickle
+import time
 
 def get_issues(sprint, search=None):
     # """
@@ -26,7 +27,7 @@ def get_issues(sprint, search=None):
             "jql": "project = ADS AND sprint = " + str(sprint) + " AND type in subtaskIssueTypes()",
             "maxResults": "100",
             "startAt": 0,
-            "fields": "status, issuetype, summary, aggregatetimespent, aggregatetimeoriginalestimate, aggregatetimeestimate, customfield_10016, assignee, created, timespent, timeoriginalestimate, timeestimate",
+            "fields": "status, issuetype, summary, aggregatetimespent, aggregatetimeoriginalestimate, aggregatetimeestimate, customfield_10016, assignee, created, timespent, timeoriginalestimate, timeestimate, customfield_11222",
             "expand": "changelog",
         }
     else:
@@ -178,7 +179,10 @@ def format_data(stories, subtasks):
                 "Awaiting UAT": 0,
                 "Done": 0,
                 "Reopened": 0,
-            },   
+            },
+
+            "subtask_rootcauses": {},
+            "subtask_rootcauses_timespent": 0,
         }
 
         print('DateCreated:', newStory['created'], '|', 'Sprint', newStory['sprints'][0]['id'], 'start:', newStory['sprints'][0]['startDate'])
@@ -188,7 +192,6 @@ def format_data(stories, subtasks):
         # print(format_sprints(issue['fields']['customfield_10016']))
 
         for subtask in issue['fields']['subtasks']:
-
             for s in subtasks:
                 if s['id'] == subtask['id']:
 
@@ -230,8 +233,11 @@ def format_data(stories, subtasks):
                         "progress": calc_progress(s['fields']['timeoriginalestimate'], s['fields']['timeestimate']),
                         "TEvsOE": timespent_vs_originalestimate(s['fields']['timeoriginalestimate'], s['fields']['timespent'], s['fields']['status']['name']),
 
+                        "rootcause": s['fields']['customfield_11222']['value'] if s['fields']['customfield_11222'] else None
+
                     }
 
+                    print("ROOTCASE:", newSubtask['rootcause'])
 
                     # SANITY CHECK
                     if s['fields']['aggregatetimeestimate'] != s['fields']['timeestimate']:
@@ -255,16 +261,23 @@ def format_data(stories, subtasks):
 
                     print('DateCreated:', dateutil.parser.parse(issue['fields']['created']), '|', 'Sprint', newSubtask['sprints'][0]['id'], 'start:', newSubtask['sprints'][0]['startDate'])
                     print('Sprints:', [i['id'] for i in newSubtask['sprints']])
-                    # print('SPRINTS:', json.dumps(newSubtask['sprints'], indent = 4))
-                    # print(json.dumps(newSubtask, indent = 4))
+                                       
                     newStory['subtasks'].append(newSubtask)
 
+                    # Increase count for subtask status in the story
                     s_status = s['fields']['status']['name']
                     newStory['subtask_status_count'][s_status] += 1
 
-                    subtask_burndown = collect_changes_and_dates(newSubtask['changelog'], newSubtask['created'], 'timeestimate', newSubtask['aggregatetimeoriginalestimate'])
-                    subtask_burndown = adjust_burndown_startdate(subtask_burndown, newSubtask['sprints'][0]['startDate'], newSubtask['sprints'][0]['id'])
-
+                    # If subtask has rootcause increase count of rootcause in the story & and aggreate timespent on rootcauses
+                    if s['fields']['customfield_11222']:
+                        rootcause = s['fields']['customfield_11222']['value']
+                        if rootcause in newStory['subtask_rootcauses']:
+                            newStory['subtask_rootcauses'][rootcause] += 1
+                        else:
+                            newStory['subtask_rootcauses'][rootcause] = 1
+                        
+                        if newSubtask['timespent']:
+                            newStory['subtask_rootcauses_timespent'] += newSubtask['timespent']
 
         storiesFormated.append(newStory)
         #print(json.dumps(newStory, indent = 4))
@@ -682,6 +695,34 @@ def get_burndown_axes(stories):
 
 
 # ------------------ RETRO ------------------ #
+
+def get_defects(stories):
+
+    stories_with_defects = []
+    defects_total_count = {}
+
+    for s in stories:
+        if s['subtask_rootcauses']:
+            
+            story_with_defect = {
+                'key': s['key'],
+                'self': s['self'],
+                'subtask_rootcauses': s['subtask_rootcauses'],
+                'timespent_on_defects': s['subtask_rootcauses_timespent'],
+            }
+
+            stories_with_defects.append(story_with_defect)
+
+            for key, value in s['subtask_rootcauses'].items():
+
+                if key in defects_total_count:
+                    defects_total_count[key] += value
+                else:
+                    defects_total_count[key] = value
+
+
+
+    return {'stories_with_defects': stories_with_defects, 'defects_total_count': defects_total_count}
 
 
 # ------------------ SETUP ------------------ #

@@ -157,6 +157,55 @@
 				<div id="test_burndown_chart" class=""></div>
 			</div>
 		</div>
+		<div class="row">
+			<div class="col-xs-4 chart_div">
+				<div id="burndown_chart" class=""></div>
+			</div>
+		</div>
+
+		<!--  DEFECTS -->
+		<br>
+
+		<div class="row">
+			<h3>Story Defects</h3>
+		</div>
+
+		<br>
+
+		<div class="row">
+			<table class="table table-condensed">
+				<thead>
+					<tr>
+						<th></th>
+						{% for key in defects['defects_total_count'] %}
+						<th>{{ key }}</th>
+						{% endfor %}
+					</tr>
+				</thead>
+
+				<tbody>
+					{% for story in defects['stories_with_defects'] %}
+					<tr>
+						<td>{{ story['key'] }}</td>
+						{% for key in defects['defects_total_count'] %}
+						<td>{% if key in story['subtask_rootcauses'] %}{{ story['subtask_rootcauses'][key] }}{% else %}{% endif %}</td>
+						{% endfor %}
+					</tr>
+					{% endfor %}
+				</tbody>
+
+
+				<tfoot>
+					<tr>
+						<th>Total</th>
+						{% for key, item in defects['defects_total_count'].items() %}
+						<th key="{{ key }}">{{ item }}</th>
+						{% endfor %}
+					</tr>
+				</tfoot>
+				
+			</table>
+		</div>
 
 	</div>
 
@@ -355,6 +404,8 @@
 
       chart.draw(data, google.charts.Line.convertOptions(options));
     }
+
+
 
 	
 

@@ -12,9 +12,11 @@ def index(sprint_id):
 	# test_burndown = backend_burndown
 	frontend_burndown = apiRequests.get_burndown(data['stories'], 'Front End')
 	test_burndown = apiRequests.get_burndown(data['stories'], 'Test')
-	haxes_burndown = apiRequests.get_burndown_axes(data['stories'])
+
+	defects = apiRequests.get_defects(data['stories'])
+
 	return render_template('index.html', stories = (data['stories']),
-		backend_burndown = backend_burndown, frontend_burndown = frontend_burndown, test_burndown = test_burndown)
+		backend_burndown = backend_burndown, frontend_burndown = frontend_burndown, test_burndown = test_burndown, defects = defects)
 
 
 @app.route('/sprint/<int:sprint_id>/data')

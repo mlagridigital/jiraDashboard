@@ -39,7 +39,7 @@ td, th {
 	vertical-align: middle;
 }
 
-th {
+th, th {
 	font-weight: 900;
 	background-color: rgba(235, 237, 240, 0.8)
 }
