@@ -173,27 +173,35 @@
 		<br>
 
 		<div class="row">
-			<table class="table table-condensed">
+			<div class="col-lg-8">
+				<table class="table table-condensed">
 				<thead>
 					<tr>
 						<th></th>
+						
 						{% for key in defects['defects_total_count'] %}
-						<th>{{ key }}</th>
+							<th>{{ key }}</th>
 						{% endfor %}
+						
 						<th>Time Spent</th>
+						<th>Average</th>
 					</tr>
 				</thead>
 
 				<tbody>
 					{% for story in defects['stories_with_defects'] %}
-					<tr>
-						<td>{{ story['key'] }}</td>
-						{% for key in defects['defects_total_count'] if key != 'Total' %}
-						<td>{% if key in story['subtask_rootcauses'] %}{{ story['subtask_rootcauses'][key] }}{% else %}{% endif %}</td>
-						{% endfor %}
-						<td>{{ story['subtask_rootcauses'].values() | sum }}</td>
-						<td style="text-align: right">{{ story['timespent_on_defects_rendered'] }}</td>
-					</tr>
+						<tr>
+							<td><a href="{{ story['self'] }}">{{ story['key'] }}</a></td>
+							
+							{% for key in defects['defects_total_count'] if key != 'Total' %}
+								<td>{% if key in story['subtask_rootcauses'] %}{{ story['subtask_rootcauses'][key] }}{% else %}{% endif %}</td>
+							{% endfor %}
+							
+							<td>{{ story['subtask_rootcauses'].values() | sum }}</td>
+							<td>{{ story['timespent_on_defects_rendered'] }}</td>
+							<!-- <td></td> -->
+							<td>{{ (story['timespent_on_defects'] / (60 * 60 * story['subtask_rootcauses'].values() | sum)) | round(1, 'common') }}h</td>
+						</tr>
 					{% endfor %}
 				</tbody>
 
@@ -201,22 +209,42 @@
 				<tfoot>
 					<tr>
 						<th>Total</th>
+						
 						{% for key, item in defects['defects_total_count'].items() %}
-						<th key="{{ key }}">{{ item['count'] }}</th>
+							<th defect_type="{{ key }}">{{ item['count'] }}</th>
 						{% endfor %}
+						
+						<th></th>
 						<th></th>
 					</tr>
 					<tr>
 						<th>Time Spent</th>
+						
 						{% for key, item in defects['defects_total_count'].items() if key != 'Total' %}
-						<th key="{{ key }}" actual="{{ item['timespent'] }}">{{ item['timespent_rendered'] }}</th>
+							<th defect_type="{{ key }}" actual="{{ item['timespent'] }}">{{ item['timespent_rendered'] }}</th>
 						{% endfor %}
+						
 						<th></th>
-						<th key="Total" actual="{{ defects['defects_total_count']['Total']['timespent'] }}">{{ defects['defects_total_count']['Total']['timespent_rendered'] }}</th>
+						<th defect_type="Total" actual="{{ defects['defects_total_count']['Total']['timespent'] }}">{{ defects['defects_total_count']['Total']['timespent_rendered'] }}</th>
+						<th></th>
 					</tr>
-				</tfoot>
-				
-			</table>
+					<tr>
+						<th>Average</th>
+						
+						{% for key, item in defects['defects_total_count'].items() if key != 'Total' %}
+							<th defect_type="{{ key }}">{{ (item['timespent'] / (60 * 60 * item['count']))|round(1, 'common') }}h</th>
+						{% endfor %}
+						
+						<th></th>
+						<th></th>
+						<th defect_type="Total">{{ (defects['defects_total_count']['Total']['timespent'] / (60 * 60 * defects['defects_total_count']['Total']['count']))|round(1, 'common') }}h</th>
+					</tr>
+				</tfoot>				
+				</table>
+			</div>
+			<div class="col-lg-4 chart_div">
+				<div id="defect_chart" class=""></div>
+			</div>
 		</div>
 
 	</div>
@@ -287,6 +315,9 @@
 	// 		console.log(data)
 	// 	});
 	// })
+</script>
+
+<script type="text/javascript">
 
     var ticks_list = [];
 	var millieconds_per_day = 1000*60*60*24;
@@ -300,10 +331,11 @@
 		ticks_list.push(new Date(Date.parse(start_date) + i * millieconds_per_day))
 	};
 
-	google.charts.load('current', {'packages':['line']});
+	google.charts.load('current', {'packages':['line', 'corechart']});
     google.charts.setOnLoadCallback(drawBackendBurndown);
     google.charts.setOnLoadCallback(drawFrontendBurndown);
     google.charts.setOnLoadCallback(drawTestBurndown);
+    google.charts.setOnLoadCallback(drawDefectPi);
 
 
     function drawBackendBurndown() {
@@ -415,6 +447,29 @@
       var chart = new google.charts.Line(document.getElementById('test_burndown_chart'));
 
       chart.draw(data, google.charts.Line.convertOptions(options));
+    }
+
+    function drawDefectPi(){
+
+    	var data = google.visualization.arrayToDataTable(
+    	[
+    		['Defect Type', 'Time Spent',],
+    		{% for d in defects['defects_total_count'] if d != 'Total' %}['{{ d }}', {{ (defects['defects_total_count'][d]['timespent'] / (60 * 60)) | round(1, 'common') }}],{% endfor %}
+    	]);
+
+    	var options = {
+    		title: '',
+    		height: 600,
+      		width: 600,
+      		legend: {
+      			position: 'right'
+      		}
+
+    	};
+
+    	var chart = new google.visualization.PieChart(document.getElementById('defect_chart'));
+    	chart.draw(data, options);
+
     }
 
 

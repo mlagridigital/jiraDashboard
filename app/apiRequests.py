@@ -739,7 +739,7 @@ def get_defects(stories):
         'timespent_rendered': format_time(sum([defects_total_count[x]['timespent'] for x in defects_total_count])),
     }
 
-    print(json.dumps(defects_total_count, indent = 4))
+    # print(json.dumps(defects_total_count, indent = 4))
     
 
     return {'stories_with_defects': stories_with_defects, 'defects_total_count': defects_total_count}
@@ -758,7 +758,7 @@ def start(sprint):
         'burndown': True,
     }
 
-    OFFLINE_MODE = True
+    OFFLINE_MODE = False
 
     if OFFLINE_MODE:
         with open('stories.pkl', 'rb') as f:
