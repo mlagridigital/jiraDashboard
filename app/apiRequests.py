@@ -780,7 +780,7 @@ def start(sprint):
         'burndown': True,
     }
 
-    OFFLINE_MODE = True
+    OFFLINE_MODE = False
 
     if OFFLINE_MODE:
         with open('stories.pkl', 'rb') as f:
