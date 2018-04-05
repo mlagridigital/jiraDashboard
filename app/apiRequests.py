@@ -697,7 +697,9 @@ def get_burndown_axes(stories):
 # ------------------ RETRO ------------------ #
 
 def get_defects(stories):
-
+    """
+    
+    """
     stories_with_defects = []
     defects_total_count = {}
 
@@ -717,11 +719,28 @@ def get_defects(stories):
             for key, value in s['subtask_rootcauses'].items():
 
                 if key in defects_total_count:
-                    defects_total_count[key] += value
+                    defects_total_count[key]['count'] += value
+                    defects_total_count[key]['timespent'] += s['subtask_rootcauses_timespent']
                 else:
-                    defects_total_count[key] = value
+                    defects_total_count[key] = {
+                        'count': value,
+                        'timespent': s['subtask_rootcauses_timespent'],
+                    }                    
 
 
+    # render the total time spent on each defect_type into w/d/h/m and store
+    for defect_type in defects_total_count:
+        defects_total_count[defect_type]['timespent_rendered'] = format_time(defects_total_count[defect_type]['timespent'])
+
+
+    defects_total_count['Total'] = {
+        'count': sum([defects_total_count[x]['count'] for x in defects_total_count]),
+        'timespent': sum([defects_total_count[x]['timespent'] for x in defects_total_count]),
+        'timespent_rendered': format_time(sum([defects_total_count[x]['timespent'] for x in defects_total_count])),
+    }
+
+    print(json.dumps(defects_total_count, indent = 4))
+    
 
     return {'stories_with_defects': stories_with_defects, 'defects_total_count': defects_total_count}
 
@@ -739,7 +758,7 @@ def start(sprint):
         'burndown': True,
     }
 
-    OFFLINE_MODE = False
+    OFFLINE_MODE = True
 
     if OFFLINE_MODE:
         with open('stories.pkl', 'rb') as f:
