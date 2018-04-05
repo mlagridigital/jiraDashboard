@@ -179,10 +179,10 @@
 					<tr>
 						<th></th>
 						
-						{% for key in defects['defects_total_count'] %}
+						{% for key in defects['defects_total_count'] if key != 'Total' %}
 							<th>{{ key }}</th>
 						{% endfor %}
-						
+						<th>Total</th>
 						<th>Time Spent</th>
 						<th>Average</th>
 					</tr>
@@ -210,7 +210,7 @@
 					<tr>
 						<th>Total</th>
 						
-						{% for key, item in defects['defects_total_count'].items() %}
+						{% for key, item in defects['defects_total_count'].items() if key != 'Total %}
 							<th defect_type="{{ key }}">{{ item['count'] }}</th>
 						{% endfor %}
 						
