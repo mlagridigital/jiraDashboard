@@ -268,6 +268,8 @@ def format_data(stories, subtasks):
                     s_status = s['fields']['status']['name']
                     newStory['subtask_status_count'][s_status] += 1
 
+
+
                     # If subtask has rootcause increase count of rootcause in the story & and aggreate timespent on rootcauses
                     if s['fields']['customfield_11222']:
                         rootcause = s['fields']['customfield_11222']['value']
@@ -288,6 +290,8 @@ def format_data(stories, subtasks):
                         
                         if newSubtask['timespent']:
                             newStory['subtask_rootcauses_timespent'] += newSubtask['timespent']
+
+
 
         storiesFormated.append(newStory)
         print("STORY ROOT CAUSE:", json.dumps(newStory['subtask_rootcauses'], indent = 4))
@@ -776,7 +780,7 @@ def start(sprint):
         'burndown': True,
     }
 
-    OFFLINE_MODE = False
+    OFFLINE_MODE = True
 
     if OFFLINE_MODE:
         with open('stories.pkl', 'rb') as f:

@@ -53,6 +53,7 @@
 
 		<div class="row">
 			<table class="table table-condensed">
+				
 				<thead id="table_stories_header">
 					<tr>
 						<th>Issue Key</th>
@@ -71,9 +72,9 @@
 						<th>DevRev</th>
 						<th>Aw UAT</th>
 						<th>Done  </th>
-						
 					</tr>
 				</thead>
+
 				<tbody>
 					{% for issue in stories %}
 						<tr class="row_story">
@@ -305,11 +306,16 @@
 		$(this).text("Show TE vs OE");
 	})
 
-	window.onscroll = function() {myFunction()};
-
-	function myFunction() {
-		if (window.)
-	}
+	// window.onscroll = function() {myFunction()};
+	// var header = document.getElementById("table_stories_header");
+	// var sticky = header.offsetTop;
+	// function myFunction() {
+	// 	if (window.pageYOffset >= sticky) {
+	// 		header.classList.add("sticky");
+	// 	} else {
+	// 		header.classList.remove("sticky");
+	// 	}
+	// }
 
 
 	// $(document).ready(function(){
