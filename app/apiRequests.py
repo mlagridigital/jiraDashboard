@@ -237,7 +237,7 @@ def format_data(stories, subtasks):
 
                     }
 
-                    print("ROOTCASE:", newSubtask['rootcause'])
+                    print("ROOT CAUSE:", newSubtask['rootcause'])
 
                     # SANITY CHECK
                     if s['fields']['aggregatetimeestimate'] != s['fields']['timeestimate']:
@@ -271,16 +271,26 @@ def format_data(stories, subtasks):
                     # If subtask has rootcause increase count of rootcause in the story & and aggreate timespent on rootcauses
                     if s['fields']['customfield_11222']:
                         rootcause = s['fields']['customfield_11222']['value']
+                        
                         if rootcause in newStory['subtask_rootcauses']:
-                            newStory['subtask_rootcauses'][rootcause] += 1
+                            newStory['subtask_rootcauses'][rootcause]['count'] += 1
+                            if newSubtask['timespent']:
+                                newStory['subtask_rootcauses'][rootcause]['timespent'] += newSubtask['timespent']
+                        
                         else:
-                            newStory['subtask_rootcauses'][rootcause] = 1
+                            newStory['subtask_rootcauses'][rootcause] = {
+                                'count': 1,
+                                'timespent': 0,
+                            }
+
+                            if newSubtask['timespent']:
+                                newStory['subtask_rootcauses'][rootcause]['timespent'] = newSubtask['timespent']
                         
                         if newSubtask['timespent']:
                             newStory['subtask_rootcauses_timespent'] += newSubtask['timespent']
 
         storiesFormated.append(newStory)
-        #print(json.dumps(newStory, indent = 4))
+        print("STORY ROOT CAUSE:", json.dumps(newStory['subtask_rootcauses'], indent = 4))
 
     data = {
         "stories": storiesFormated,
@@ -706,27 +716,31 @@ def get_defects(stories):
     for s in stories:
         if s['subtask_rootcauses']:
             
+            timespent_on_defects = sum([s['subtask_rootcauses'][x]['timespent'] for x in s['subtask_rootcauses']])
+
             story_with_defect = {
                 'key': s['key'],
                 'self': s['self'],
                 'subtask_rootcauses': s['subtask_rootcauses'],
-                'timespent_on_defects': s['subtask_rootcauses_timespent'],
-                'timespent_on_defects_rendered': format_time(s['subtask_rootcauses_timespent']),
+                'total_count': sum([s['subtask_rootcauses'][x]['count'] for x in s['subtask_rootcauses']]),
+                'timespent_on_defects': timespent_on_defects,
+                'timespent_on_defects_rendered': format_time(timespent_on_defects),
             }
 
             stories_with_defects.append(story_with_defect)
 
             for key, value in s['subtask_rootcauses'].items():
 
+                # print("HERE: ", key, value)
+
                 if key in defects_total_count:
-                    defects_total_count[key]['count'] += value
-                    defects_total_count[key]['timespent'] += s['subtask_rootcauses_timespent']
+                    defects_total_count[key]['count'] += value['count']
+                    defects_total_count[key]['timespent'] += value['timespent']
                 else:
                     defects_total_count[key] = {
-                        'count': value,
-                        'timespent': s['subtask_rootcauses_timespent'],
-                    }                    
-
+                        'count': value['count'],
+                        'timespent': value['timespent'],
+                    }
 
     # render the total time spent on each defect_type into w/d/h/m and store
     for defect_type in defects_total_count:
@@ -741,6 +755,9 @@ def get_defects(stories):
 
     print("----- DEFECTS -----")
     print(json.dumps(defects_total_count, indent = 4))
+
+    print("----- STORY DEFECT -----")
+    print(json.dumps(stories_with_defects, indent = 4))
     
 
     return {'stories_with_defects': stories_with_defects, 'defects_total_count': defects_total_count}
@@ -759,7 +776,7 @@ def start(sprint):
         'burndown': True,
     }
 
-    OFFLINE_MODE = False
+    OFFLINE_MODE = True
 
     if OFFLINE_MODE:
         with open('stories.pkl', 'rb') as f:

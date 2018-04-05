@@ -53,7 +53,7 @@
 
 		<div class="row">
 			<table class="table table-condensed">
-				<thead>
+				<thead id="table_stories_header">
 					<tr>
 						<th>Issue Key</th>
 						<th>Issue Type      </th>
@@ -194,13 +194,11 @@
 							<td><a href="{{ story['self'] }}">{{ story['key'] }}</a></td>
 							
 							{% for key in defects['defects_total_count'] if key != 'Total' %}
-								<td>{% if key in story['subtask_rootcauses'] %}{{ story['subtask_rootcauses'][key] }}{% else %}{% endif %}</td>
+								<td>{% if key in story['subtask_rootcauses'] %}{{ story['subtask_rootcauses'][key]['count'] }}{% else %}{% endif %}</td>
 							{% endfor %}
-							
-							<td>{{ story['subtask_rootcauses'].values() | sum }}</td>
+							<td>{{ story['total_count'] }}</td>
 							<td>{{ story['timespent_on_defects_rendered'] }}</td>
-							<!-- <td></td> -->
-							<td>{{ (story['timespent_on_defects'] / (60 * 60 * story['subtask_rootcauses'].values() | sum)) | round(1, 'common') }}h</td>
+							<td>{{ (story['timespent_on_defects'] / (60 * 60 * story['total_count'])) | round(1, 'common') }}h</td>
 						</tr>
 					{% endfor %}
 				</tbody>
@@ -307,7 +305,11 @@
 		$(this).text("Show TE vs OE");
 	})
 
+	window.onscroll = function() {myFunction()};
 
+	function myFunction() {
+		if (window.)
+	}
 
 
 	// $(document).ready(function(){
