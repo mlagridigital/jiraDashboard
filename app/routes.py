@@ -3,20 +3,54 @@ from app import app
 import requests, json
 from . import apiRequests
 
+
+
+@app.route('/')
+def index():
+
+	all_sprints = apiRequests.get_all_sprints()
+	return render_template('index.html', all_sprints = all_sprints)
+
 @app.route('/sprint/<int:sprint_id>')
-def index(sprint_id):
+def sprint_dashboard(sprint_id):
+
+	all_sprints = apiRequests.get_all_sprints()
+	this_sprint = apiRequests.get_sprint(sprint_id, all_sprints)
 
 	data = apiRequests.start(sprint_id)
-	backend_burndown = apiRequests.get_burndown(data['stories'], 'Backend')
+
+	burndown_data = apiRequests.get_burndown(data['stories'], this_sprint)
+
+
+	sprint_burndown = apiRequests.append_cumulative_total(burndown_data)
+
+	# print(burndown_data)
+	backend_data = [x for x in burndown_data if x[2] == 'Backend']
+	backend_burndown = apiRequests.append_cumulative_total(backend_data)
+
+	frontend_data = [x for x in burndown_data if x[2] == 'Front End']
+	frontend_burndown = apiRequests.append_cumulative_total(frontend_data)
+
+	test_data = [x for x in burndown_data if x[2] == 'Test']
+	test_burndown = apiRequests.append_cumulative_total(test_data)
+
 	# frontend_burndown = backend_burndown
 	# test_burndown = backend_burndown
-	frontend_burndown = apiRequests.get_burndown(data['stories'], 'Front End')
-	test_burndown = apiRequests.get_burndown(data['stories'], 'Test')
+	# frontend_burndown = apiRequests.get_burndown(data['stories'], 'Front End', this_sprint)
+	# test_burndown = apiRequests.get_burndown(data['stories'], 'Test', this_sprint)
 
 	defects = apiRequests.get_defects(data['stories'])
 
-	return render_template('index.html', stories = (data['stories']),
-		backend_burndown = backend_burndown, frontend_burndown = frontend_burndown, test_burndown = test_burndown, defects = defects)
+	return render_template('sprint_dashboard.html',
+		stories = (data['stories']),
+		sprint_burndown = sprint_burndown,
+		backend_burndown = backend_burndown,
+		frontend_burndown = frontend_burndown,
+		test_burndown = test_burndown,
+		defects = defects,
+		all_sprints = all_sprints,
+		this_sprint = this_sprint,
+		)
 
 
 @app.route('/sprint/<int:sprint_id>/data')

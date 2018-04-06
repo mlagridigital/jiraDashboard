@@ -76,6 +76,54 @@ def get_issues(sprint, search=None):
     return parsed['issues']
 
 
+def get_all_sprints():
+
+    url = 'https://fullprofile.atlassian.net/rest/agile/1.0/board/12/sprint/'
+    headers = {
+        'Authorization': "Basic dGltLnZhbi5lbGxlbWVldDpBZ3JpZGlnaXRhbDEhamlyYQ==",
+        'Cache-Control': "no-cache",
+        'Postman-Token': "9514aa40-4142-43df-bf5e-361c551463f2"
+    }
+
+    querystring = {
+        'startAt': 0,
+    }
+
+    print("-" * 10)
+    print("Getting sprints meta")
+    # print("Requesting jql query: ", querystring['jql'])
+    # print("Filtering for fields: ", querystring['fields'])
+
+    response = requests.request("GET", url, headers=headers, params=querystring)
+    parsed = response.json()
+    sprints = parsed['values']
+    print("Recieved", len(sprints), 'sprints', 'starting at', querystring['startAt'])
+
+    i = 1
+    while not parsed['isLast']:
+
+        querystring['startAt'] = i * parsed['maxResults']
+        response = requests.request("GET", url, headers=headers, params=querystring).json()
+        print("Recieved", len(response['values']), 'sprints', 'starting at', querystring['startAt'])
+
+        sprints.extend(response['values'])
+        parsed['isLast'] = response['isLast']
+        i += 1
+
+    print("Received", len(sprints), "sprints in total")
+
+    return sprints[::-1]
+
+    # print(json.dumps(sprints, indent = 4))
+
+
+def get_sprint(sprint_id, all_sprints):
+
+    this_sprint = [item for item in all_sprints if item['id'] == sprint_id]
+
+    return this_sprint[0]
+
+
 # ------------------ FORMAT ISSUES ------------------ #
 
 def format_data(stories, subtasks):
@@ -538,71 +586,106 @@ def calc_dif(to, _from):
 # ------------------ BURNDOWN ------------------ #
 
 
-def filter_burndown(burndown, issueType):
+def append_cumulative_total(dataset):
 
-    pass
-
-
-def get_burndown(stories, devteam):
-    """
-
-    """
-
-    # if devteam not in ['Front End', 'Backend', 'Test']:
-    #     print("Error: get_burndown - devteam not in ['Front End', 'Backend', 'Test']")
-
-    raw_data = []
-    burndown_data = []
-
-    for story in stories:
-
-        # if devteam == "total_burndown":
-            # print()
-            # print(story['key'])
-            # print(story['issuetype'])
-            # print(story['created'])
-            # print('OE:', story['timeoriginalestimate'], 'TE:', story['timeestimate'], 'TS:', story['timespent'])
-            # subtask_burndown = collect_changes_and_dates(story['changelog'], story['created'], 'timeestimate', story['timeoriginalestimate'])
-            # subtask_burndown = adjust_burndown_startdate(subtask_burndown, story['sprints'][0]['startDate'], story['sprints'][0]['id'])
-            # raw_data.extend(subtask_burndown)
-
-        for subtask in story['subtasks']:
-            
-            if subtask['devteam'] != devteam:
-                continue
-                
-            print()
-            print(subtask['key'])
-            print(subtask['devteam'])
-            print(subtask['created'])
-            print('OE:', subtask['aggregatetimeoriginalestimate'], 'TE:', subtask['aggregatetimeestimate'], 'TS:', subtask['aggregatetimespent'])
-
-            
-            subtask_burndown = collect_changes_and_dates(subtask['changelog'], subtask['created'], 'timeestimate', subtask['aggregatetimeoriginalestimate'])
-            subtask_burndown = adjust_burndown_startdate(subtask_burndown, subtask['sprints'][0]['startDate'], subtask['sprints'][0]['id'])
-
-            raw_data.extend(subtask_burndown)
-
-    raw_data.sort(key=lambda e: e[0])
-    
-
+    new_dataset = []
     total = 0
 
-    for line in raw_data:
-        # print(line)
-        burndown_data.append([line[0], total])
-        total += line[1]
-        burndown_data.append([line[0], total])
+    for i in dataset:
+        new_item = i[:]
+        new_item.append(total)
+        new_dataset.append(new_item)
+        # print(new_item)
+        
+        total += i[3]
+        new_item = i[:]
+        new_item.append(total)
+        new_dataset.append(new_item)
+        # print(new_item)
 
-    
-    print(devteam, 'BURNDOWN SUM:', sum([i[1] for i in raw_data])/(60*60))
+    # print("DATASET")
+    # print(new_dataset)
+
+
+    return new_dataset
+
+
+def get_burndown(stories, this_sprint):
+    """
+
+    """
+
+    raw_data = get_burndown_raw(stories, this_sprint)
+    # sort raw_data by date
+    raw_data.sort(key=lambda e: e[0])
+    burndown_data = []
+    # burndown_data = raw_data
+
+
+    for line in raw_data:
+        # print(str(line[0]).ljust(32), str(line[1]).rjust(7))
+        # print(line)
+        # print([total])
+        burndown_data.append(line)
+        # total += line[3]
+        # burndown_data.append(line.extend([total]))
+
+
+    # print()
+    # print('Hours at burndown end:', sum([i[1] for i in raw_data])/(60*60))
 
     with open('data.csv', 'w') as f:
-    	writer = csv.writer(f)
-    	for line in burndown_data:
-    		writer.writerow(line)
+        writer = csv.writer(f)
+        for line in burndown_data:
+            writer.writerow(line)
+
 
     return burndown_data
+
+
+def get_burndown_raw(stories, this_sprint):
+    raw_data = []
+
+    for story in stories:
+        issue_burndown = get_issue_burndown(story, this_sprint)
+        raw_data.extend(issue_burndown)
+
+        for subtask in story['subtasks']:
+            issue_burndown = get_issue_burndown(subtask, this_sprint)
+            raw_data.extend(issue_burndown)
+
+    return raw_data
+
+
+def get_issue_burndown(issue, this_sprint):
+
+    if 'devteam' in issue:
+        devteam = issue['devteam']
+    else:
+        devteam = "" 
+
+    print()
+    print("Issue key:", issue['key'])
+    print("Devteam:", issue['devteam']) if 'devteam' in issue else print("Devteam: n/a")
+    print("Issue created:", issue['created'])
+    print('Issue', 'OE:', issue['timeoriginalestimate'], 'TE:', issue['timeestimate'], 'TS:', issue['timespent'])
+
+    # print issue changelog
+    print("-- changelog --")
+    for change in issue['changelog']:
+        print(str(change['created']).ljust(32), change['field'].ljust(20), str(change['from']).rjust(6), '->', str(change['to']).ljust(6))
+    
+    # get list of burndown items [date, int], each item is the change in value of the field at the change instance
+    issue_burndown = collect_changes_and_dates(issue['changelog'], issue['created'], 'timeestimate', issue['timeoriginalestimate'])
+    
+    # sum items in burndown where item date is less than given start date
+    issue_burndown = adjust_burndown_startdate(issue_burndown, this_sprint['startDate'], this_sprint['id'])
+
+    new_list = []
+    for item in issue_burndown:
+        new_list.append([item[0], issue['key'], devteam, item[1]])
+
+    return new_list
 
 
 def collect_changes_and_dates(changelog, issue_created, field, subtask_originalestimate):
@@ -616,24 +699,22 @@ def collect_changes_and_dates(changelog, issue_created, field, subtask_originale
 
     print('--', 'Filtered changelog items', '--')
 
-    for i, change in enumerate(changelog):
+    for change in changelog:
         
         if change['field'] == field:
             
             if first:
-                first = False
-
                 if change['from'] is not None:
                     issue_burndown.append([issue_created, int(change['from'])])
                     print(str(issue_created).ljust(32), str(change['from']).rjust(25))
+                first = False
 
             issue_burndown.append([change['created'], calc_dif(change['to'], change['from'])])
             print(str(change['created']).ljust(32), str(change['from']).rjust(6), '->', str(change['to']).ljust(6), '=', str(calc_dif(change['to'], change['from'])).rjust(6))
 
-
     if len(issue_burndown) == 0 and subtask_originalestimate is not None:
         issue_burndown.append([issue_created, subtask_originalestimate])
-        print(str(issue_created).ljust(32), 'no changes', subtask_originalestimate)
+        print(str(issue_created).ljust(32), subtask_originalestimate)
 
     if DEBUG['burndown']:
         print('--', 'Items in issue burndown', '--')
@@ -648,15 +729,16 @@ def adjust_burndown_startdate(subtask_raw_data, sprint_start, sprint_id):
     total = 0
     subtask_burndown =[]
 
-    print("--", "Subtask burndown after date adjustment", "|", "Sprint", str(sprint_id), "start:", str(sprint_start), "--")
+    sprint_start = dateutil.parser.parse(sprint_start)
 
-    print('-before-')
+    print("--", "Adjusting burndown to align with sprint", "|", "Sprint", str(sprint_id), "start:", str(sprint_start), "--")
 
+    print('-burndown before-')
     for line in subtask_raw_data:
-        print(str(line[0]), line[1])
+        print(str(line[0]).ljust(32), str(line[1]).rjust(7))
 
 
-    print('-after-')
+
 
     for i, point in enumerate(subtask_raw_data):
         
@@ -679,14 +761,16 @@ def adjust_burndown_startdate(subtask_raw_data, sprint_start, sprint_id):
             subtask_burndown.append(new_point)
 
 
+
+    print('-burndown after-')
     for line in subtask_burndown:
-        print(str(line[0]), line[1])
+        print(str(line[0]).ljust(32), str(line[1]).rjust(7))
 
 
     total_re_before = sum([x[1] for x in subtask_raw_data])
     total_re_after = sum([x[1] for x in subtask_burndown])
 
-    print('before:', total_re_before, 'after:', total_re_after, total_re_after == total_re_before)
+    print('Sum of changelog before:', total_re_before, 'after:', total_re_after, total_re_after == total_re_before)
 
     return subtask_burndown
 
@@ -701,11 +785,6 @@ def get_startdate(story, issue):
     pass
 
 
-def get_burndown_axes(stories):
-
-    start_date = stories[0]['sprints'][0]['startDate']
-    end_date = stories[0]['sprints'][0]['endDate']
-    pass
 
 
 # ------------------ RETRO ------------------ #
@@ -757,11 +836,11 @@ def get_defects(stories):
         'timespent_rendered': format_time(sum([defects_total_count[x]['timespent'] for x in defects_total_count])),
     }
 
-    print("----- DEFECTS -----")
-    print(json.dumps(defects_total_count, indent = 4))
+    # print("----- DEFECTS -----")
+    # print(json.dumps(defects_total_count, indent = 4))
 
-    print("----- STORY DEFECT -----")
-    print(json.dumps(stories_with_defects, indent = 4))
+    # print("----- STORY DEFECT -----")
+    # print(json.dumps(stories_with_defects, indent = 4))
     
 
     return {'stories_with_defects': stories_with_defects, 'defects_total_count': defects_total_count}
@@ -780,7 +859,7 @@ def start(sprint):
         'burndown': True,
     }
 
-    OFFLINE_MODE = False
+    OFFLINE_MODE = True
 
     if OFFLINE_MODE:
         with open('stories.pkl', 'rb') as f:
