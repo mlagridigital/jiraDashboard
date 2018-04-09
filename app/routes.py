@@ -24,6 +24,12 @@ def sprint_dashboard(sprint_id):
 
 	sprint_burndown = apiRequests.append_cumulative_total(burndown_data)
 
+	for line in sprint_burndown:
+		print_str = [str(item) for item in line]
+		print_str[3] = round(int(print_str[3]) / (60*60), 1) 
+		print_str[4] = round(int(print_str[4]) / (60*60), 1) 
+		print(print_str)
+
 	# print(burndown_data)
 	backend_data = [x for x in burndown_data if x[2] == 'Backend']
 	backend_burndown = apiRequests.append_cumulative_total(backend_data)

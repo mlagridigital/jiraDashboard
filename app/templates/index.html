@@ -20,24 +20,39 @@
 <body>
 
 	<div class="jumbotron">
-		<h1>AgriDigital Sprint Dashboard</h1>
-		
-		{% block title %}
-		{% endblock %}
-		
-		
-		<div id="sprint_input_group" class="input-group">
-			<div class="input-group-prepend">
-				<span class="input-group-text">Sprint No:</span>
-			</div>
-			<input id="sprint_input" type="text" class="form-control" value="">
-		</div>		
+		<div class="row">
 
-		<div class="dropdown">
-			<button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Sprints</button>
-			<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-				{% for sprint in all_sprints %}<a class="dropdown-item" id="{{ sprint['id'] }}" href="{{ url_for('index') }}sprint/{{ sprint['id'] }}">{{ sprint['name'] }}</a>{% endfor %}
+			<div class="col-md-8">
+				<h1>AgriDigital Sprint Dashboard</h1>
+				
+				{% block title %}
+				{% endblock %}
+				
+				
+				<div id="sprint_input_group" class="input-group">
+					<div class="input-group-prepend">
+						<span class="input-group-text">Sprint No:</span>
+					</div>
+					<input id="sprint_input" type="text" class="form-control" value="">
+				</div>		
+
+				<div class="dropdown">
+					<button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Sprints</button>
+					<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+						{% for sprint in all_sprints %}<a class="dropdown-item" id="{{ sprint['id'] }}" href="{{ url_for('index') }}sprint/{{ sprint['id'] }}">{{ sprint['name'] }}</a>{% endfor %}
+					</div>
+				</div>
 			</div>
+<!-- 
+			<div class="col-md-4">	
+				<div class="days_remaining_container">
+					<div class="days_remaining_contents">
+						<h4>Days Remaining</h4>
+						<h1>8</h1>
+					</div>
+				</div>
+			</div> -->
+
 		</div>
 
 	</div>
@@ -45,20 +60,15 @@
 	{% block content %}
 	{% endblock %}
 
-
-	<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 
 </body>
 
 <script type="text/javascript">
-
-	
-	$('.row_story').click(function(){
-		$(this).nextUntil('tr.row_story').slideToggle(200);
-	});
 
 	$('#sprint_input').keypress(function(e){
 		if(e.which == 13){
@@ -90,7 +100,6 @@
 
 {% block script %}
 {% endblock %}
-
 
 
 

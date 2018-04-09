@@ -239,6 +239,12 @@
 
 <!-- TABLE BUTTONS -->
 <script type="text/javascript">
+
+		
+	$('.row_story').click(function(){
+		$(this).nextUntil('tr.row_story').slideToggle(200);
+	});
+
 	
 	$('div.row').on('click', 'button.btn-expand_all', function(event) {
 		$('tr.row_subtask').attr("style", "display: table-row;");
