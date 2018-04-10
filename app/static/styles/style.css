@@ -112,11 +112,11 @@ td.cell_progress_percentage {
 	min-width: 80px;
 }
 
-@media only screen and (min-width: 1920px) {
+/*@media only screen and (min-width: 1920px) {
 	.progress {
 		min-width: 150px;
 	}
-}
+}*/
 
 th.cell_summary, td.cell_summary {
 	display: none;
@@ -161,6 +161,17 @@ th.cell_summary, td.cell_summary {
 .traffic_light_inProgress {
 	background-color: #cccccc;
 	border-color: #8c8c8c;
+}
+
+.alert {
+    margin-bottom: 0;
+	padding: .2rem .2rem;
+}
+
+.alert-overruning {
+	color: #731c73;
+	background-color: #f8d8f0;
+	border-color: #f5c7de;
 }
 
 .cell_TEvsOE {

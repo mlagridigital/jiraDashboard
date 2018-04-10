@@ -14,14 +14,13 @@ def index():
 @app.route('/sprint/<int:sprint_id>')
 def sprint_dashboard(sprint_id):
 
-	all_sprints = apiRequests.get_all_sprints()
+	# all_sprints = apiRequests.get_all_sprints()
+	# this_sprint = apiRequests.get_sprint(sprint_id, all_sprints)
+
+	data, all_sprints = apiRequests.start(sprint_id)
+
 	this_sprint = apiRequests.get_sprint(sprint_id, all_sprints)
-
-	data = apiRequests.start(sprint_id)
-
 	burndown_data = apiRequests.get_burndown(data['stories'], this_sprint)
-
-
 	sprint_burndown = apiRequests.append_cumulative_total(burndown_data)
 
 	for line in sprint_burndown:
@@ -40,6 +39,8 @@ def sprint_dashboard(sprint_id):
 	test_data = [x for x in burndown_data if x[2] == 'Test']
 	test_burndown = apiRequests.append_cumulative_total(test_data)
 
+	sprint_summary = apiRequests.summarise_sprint(data['stories'])
+
 	# frontend_burndown = backend_burndown
 	# test_burndown = backend_burndown
 	# frontend_burndown = apiRequests.get_burndown(data['stories'], 'Front End', this_sprint)
@@ -56,6 +57,7 @@ def sprint_dashboard(sprint_id):
 		defects = defects,
 		all_sprints = all_sprints,
 		this_sprint = this_sprint,
+		sprint_summary = sprint_summary,
 		)
 
 

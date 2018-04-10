@@ -538,38 +538,38 @@ def timespent_vs_originalestimate(originalestimate, timespent, status):
 
     if isinstance(originalestimate, int) and isinstance(timespent, int):
         difference = originalestimate - timespent
-        precentage = calc_progress(originalestimate, timespent)
+        percentage = calc_progress(originalestimate, timespent)
 
-        if precentage is not None:
-            precentage = -1 * precentage
+        if percentage is not None:
+            percentage = -1 * percentage
 
     else:
         print("ERROR: [timespent_vs_originalestimate] - Time not int [OE:", originalestimate, ", TE:", timespent, "]")
         difference = None
-        precentage = None
+        percentage = None
 
+    return {'value': difference, 'rendered': format_time(difference), 'percentage': percentage, 'traffic_light': traffic_light(percentage, status)}
+
+
+def traffic_light(percentage, status):
 
     if status == 'Done':
-        tl = traffic_light(precentage)
+        if percentage == None:
+            return None
+        elif percentage < 0:
+            return 'info'
+        elif percentage <= 10:
+            return 'success'
+        elif percentage <= 50:
+            return 'warning'
+        else:
+            return 'danger'
+
+    elif percentage != None and percentage >= 10:
+        return 'overruning'
+
     else:
-        tl = 'inProgress'
-
-    return {'value': difference, 'rendered': format_time(difference), 'percentage': precentage, 'traffic_light': tl}
-
-
-def traffic_light(percentage):
-
-    if percentage == None:
-        return None
-    elif percentage < 0:
-        return 'blue'
-    elif percentage <= 10:
-        return 'green'
-    elif percentage <= 50:
-        return 'amber'
-    else:
-        return 'red'
-
+        return 'inProgress'
 
 def calc_dif(to, _from):
 
@@ -846,6 +846,55 @@ def get_defects(stories):
     return {'stories_with_defects': stories_with_defects, 'defects_total_count': defects_total_count}
 
 
+def summarise_sprint(stories):
+
+    sprint_summary = {
+        'subtask_count': 0,
+        'aggregatetimespent': 0,
+        'aggregatetimeestimate': 0,
+        'aggregatetimeoriginalestimate': 0,
+        'progress': 0,
+        'subtask_status': {
+            'To Do': 0,
+            'Dev In Progress': 0,
+            'Dev Review': 0,
+            'Awaiting UAT': 0,
+            'Done': 0,
+            'Reopened': 0
+        },
+        'TSvsOE': {},
+
+    }
+
+    for story in stories:
+
+        if story['aggregatetimespent']:
+            sprint_summary['aggregatetimespent'] += story['aggregatetimespent']
+        if story['aggregatetimeestimate']:
+            sprint_summary['aggregatetimeestimate'] += story['aggregatetimeestimate']
+        if story['aggregatetimeoriginalestimate']:
+            sprint_summary['aggregatetimeoriginalestimate'] += story['aggregatetimeoriginalestimate']
+
+        sprint_summary['subtask_status']['To Do'] += story['subtask_status_count']['To Do']
+        sprint_summary['subtask_status']['Dev In Progress'] += story['subtask_status_count']['Dev In Progress']
+        sprint_summary['subtask_status']['Dev Review'] += story['subtask_status_count']['Dev Review']
+        sprint_summary['subtask_status']['Awaiting UAT'] += story['subtask_status_count']['Awaiting UAT']
+        sprint_summary['subtask_status']['Done'] += story['subtask_status_count']['Done']
+        sprint_summary['subtask_status']['Reopened'] += story['subtask_status_count']['Reopened']
+
+
+    sprint_summary['progress'] = calc_progress(sprint_summary['aggregatetimeoriginalestimate'], sprint_summary['aggregatetimeestimate'])
+    sprint_summary['TSvsOE'] = timespent_vs_originalestimate(sprint_summary['aggregatetimeoriginalestimate'], sprint_summary['aggregatetimespent'], '')
+
+    sprint_summary['aggregatetimespent_rendered'] = format_time(sprint_summary['aggregatetimespent'])
+    sprint_summary['aggregatetimeestimate_rendered'] = format_time(sprint_summary['aggregatetimeestimate'])
+    sprint_summary['aggregatetimeoriginalestimate_rendered'] = format_time(sprint_summary['aggregatetimeoriginalestimate'])
+
+    print(json.dumps(sprint_summary, indent = 4))
+
+    return sprint_summary
+
+
 # ------------------ SETUP ------------------ #
 
 def start(sprint):
@@ -866,6 +915,8 @@ def start(sprint):
             stories = pickle.load(f)
         with open('subtasks.pkl', 'rb') as f:
             subtasks = pickle.load(f)
+        with open('all_sprints.pkl', 'rb') as f:
+            all_sprints = pickle.load(f)
 
         print('-'*20)
         print()
@@ -876,20 +927,24 @@ def start(sprint):
     else:
         stories = get_issues(sprint, search="stories")
         subtasks = get_issues(sprint, search="subtasks")
+        all_sprints = get_all_sprints()
 
         print("Stories received:", len(stories))
         print("Subtasks received:", len(subtasks))
+        print("Sprints received:", len(all_sprints))
 
         with open('stories.pkl', 'wb') as f:
             pickle.dump(stories, f)
         with open('subtasks.pkl', 'wb') as f:
             pickle.dump(subtasks, f)
+        with open('all_sprints.pkl', 'wb') as f:
+            pickle.dump(all_sprints, f)
 
     data = format_data(stories, subtasks)
 
     print(SPRINT_LOG)
 
-    return data
+    return (data, all_sprints)
 
 
 if __name__ == "__main__":

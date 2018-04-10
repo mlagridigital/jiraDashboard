@@ -45,7 +45,8 @@
 					<th>Time Spent</th>
 					<th>Remaining Time</th>
 					<th colspan="2">Progress</th>
-					<th class="cell_TEvsOE" colspan="3">TS vs OE</th>
+					<th class="cell_TEvsOE" colspan="1">TS vs OE</th>
+					<th class="cell_TEvsOE"></th>
 					<th>To Do </th>
 					<th>In Dev</th>
 					<th>DevRev</th>
@@ -69,9 +70,10 @@
 						<td class="cell_time" actual="{{ issue.aggregatetimeestimate }}">{% if issue.aggregatetimeestimate != None %}{{ issue.aggregatetimeestimate_str }}{% endif %}</td>
 						<td class="cell_progress_percentage">{% if issue.progress != None %}{{ issue.progress }}%{% endif %}</td>
 						<td class="cell_progress"><div class="progress" style="height: 10px; width: 100%"><div class="progress-bar" style="height: 10px; width: {{ issue.progress }}%"></div></div></td>
+						
 						<td class="cell_TEvsOE" actual="{{ issue.TEvsOE.value }}">{% if issue.TEvsOE.value != None %}{{ issue.TEvsOE.rendered }}{% endif %}</td>
-						<td class="cell_TEvsOE">{% if issue.TEvsOE.value != None %}{{ issue.TEvsOE.percentage }}%{% endif %}</td>
-						<td class="cell_TEvsOE" align="center">{% if issue.TEvsOE.traffic_light != None %}<span class="traffic_light traffic_light_{{ issue.TEvsOE.traffic_light }}"></span>{% endif %}</td>
+						<td class="cell_TEvsOE"><div class="alert alert-{{ issue.TEvsOE.traffic_light }}">{% if issue.TEvsOE.value != None %}{{ issue.TEvsOE.percentage }}%{% endif %}</div></td>
+
 						<td class="cell_status_count">{% if issue.subtask_status_count['To Do'] > 0 %}{{ issue.subtask_status_count['To Do'] }}{% endif %}</td>
 						<td class="cell_status_count">{% if issue.subtask_status_count['Dev In Progress'] > 0 %}{{ issue.subtask_status_count['Dev In Progress'] }}{% endif %}</td>
 						<td class="cell_status_count">{% if issue.subtask_status_count['Dev Review'] > 0 %}{{ issue.subtask_status_count['Dev Review'] }}{% endif %}</td>
@@ -96,9 +98,10 @@
 									<td class="cell_time" actual="{{ subtask.aggregatetimeestimate }}">{% if subtask.aggregatetimeestimate != None %}{{ subtask.aggregatetimeestimate_str }}{% endif %}</td>
 									<td class="cell_progress_percentage">{% if subtask.progress != None %}{{ subtask.progress }}%{% endif %}</td>
 									<td class="cell_progress"><div class="progress" style="height: 10px; width: 100%"><div class="progress-bar bg-warning" style="height: 10px; width: {{ subtask.progress }}%"></div></div></td>
+									
 									<td class="cell_TEvsOE" actual="{{ subtask.TEvsOE.value }}">{% if subtask.TEvsOE.value != None %}{{ subtask.TEvsOE.rendered }}{% endif %}</td>
-									<td class="cell_TEvsOE">{% if subtask.TEvsOE.value != None %}{{ subtask.TEvsOE.percentage }}%{% endif %}</td>
-									<td class="cell_TEvsOE" align="center">{% if subtask.TEvsOE.traffic_light != None %}<span class="traffic_light traffic_light_{{ subtask.TEvsOE.traffic_light }}"></span>{% endif %}</td>
+									<td class="cell_TEvsOE"><div class="alert alert-{{ subtask.TEvsOE.traffic_light }}">{% if subtask.TEvsOE.value != None %}{{ subtask.TEvsOE.percentage }}%{% endif %}</div></td>
+									
 									<td class="cell_status_count">{% if subtask.status == 'To Do' %}*{% endif %}</td>
 									<td class="cell_status_count">{% if subtask.status == 'Dev In Progress' %}*{% endif %}</td>
 									<td class="cell_status_count">{% if subtask.status == 'Dev Review' %}*{% endif %}</td>
@@ -114,10 +117,34 @@
 					</tr>
 				{% endfor %}
 			</tbody>
+			<tfoot>
+				<th></th>
+				<th></th>
+				<th></th>
+				<th></th>
+				<th></th>
+				<th></th>
+				<th>{{ sprint_summary['aggregatetimeoriginalestimate_rendered'] }}</th>
+				<th>{{ sprint_summary['aggregatetimespent_rendered'] }}</th>
+				<th>{{ sprint_summary['aggregatetimeestimate_rendered'] }}</th>
+				<th class="cell_progress_percentage">{{ sprint_summary['progress'] }}%</th>
+				<th></th>
+				<th class="cell_TEvsOE"></th>
+				<th class="cell_TEvsOE"></th>
+
+				<th class="cell_status_count">{{ sprint_summary['subtask_status']['To Do'] }}</th>
+				<th class="cell_status_count">{{ sprint_summary['subtask_status']['Dev In Progress'] }}</th>
+				<th class="cell_status_count">{{ sprint_summary['subtask_status']['Dev Review'] }}</th>
+				<th class="cell_status_count">{{ sprint_summary['subtask_status']['Awaiting UAT'] }}</th>
+				<th class="cell_status_count">{{ sprint_summary['subtask_status']['Done'] }}</th>
+			</tfoot>
+
 		</table>
 	</div>
 
 	<!--   BURNDOWNS    -->
+
+<!-- 
 	<br>
 
 	<div class="row">
@@ -143,6 +170,7 @@
 		</div>
 	</div>
 
+ -->
 
 	<!--  DEFECTS -->
 	<br>
@@ -223,7 +251,7 @@
 			</table>
 		</div>
 		<div class="col-lg-4 chart_div">
-			<div id="defect_chart" class=""></div>
+			<canvas id="defect_chart" class="" width="400" height="400"></canvas>
 		</div>
 	</div>
 
@@ -306,7 +334,7 @@
     google.charts.setOnLoadCallback(drawBackendBurndown);
     google.charts.setOnLoadCallback(drawFrontendBurndown);
     google.charts.setOnLoadCallback(drawTestBurndown);
-    google.charts.setOnLoadCallback(drawDefectPi);
+    // google.charts.setOnLoadCallback(drawDefectPi);
 
     function drawSprintBurndown() {
 
@@ -478,8 +506,55 @@
 
     	var chart = new google.visualization.PieChart(document.getElementById('defect_chart'));
     	chart.draw(data, options);
-
     }
+
+
+	var ctx = document.getElementById("defect_chart");
+
+    var myPieChart = new Chart(ctx, {
+    	type: 'doughnut',
+    	data: {
+			datasets: [{	
+				data: [{% for d in defects['defects_total_count'] if d != 'Total' %}{{ (defects['defects_total_count'][d]['timespent'] / (60 * 60)) | round(1, 'common') }},{% endfor %}],
+	            backgroundColor: [
+		            'rgba(255, 99, 132, 0.2)',
+		            'rgba(54, 162, 235, 0.2)',
+		            'rgba(255, 206, 86, 0.2)',
+		            'rgba(75, 192, 192, 0.2)',
+		            'rgba(153, 102, 255, 0.2)',
+		            'rgba(255, 159, 64, 0.2)'
+            	],
+            	borderColor: [
+	                'rgba(255,99,132,1)',
+	                'rgba(54, 162, 235, 1)',
+	                'rgba(255, 206, 86, 1)',
+	                'rgba(75, 192, 192, 1)',
+	                'rgba(153, 102, 255, 1)',
+	                'rgba(255, 159, 64, 1)'
+            	],
+            	borderWidth: 1,
+
+			}],
+			labels: [{% for d in defects['defects_total_count'] if d != 'Total' %}'{{ d }}',{% endfor %}],
+		},
+    	options: {
+    		color: [
+    			'red',
+    			'blue',
+    			'green',
+    			'black',
+    			'yellow',
+    			'pink',
+    			'orange',
+    			'purple',
+    		],
+
+    		legend: {
+    			position: 'bottom',
+    		},
+    	},
+
+	})
 
 </script>
 
