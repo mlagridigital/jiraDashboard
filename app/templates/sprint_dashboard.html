@@ -23,7 +23,7 @@
 		</div>
 		<div class="col-lg-6" align="right">
 			<button id="table_expand_all" type="button" class="btn btn-success btn-expand_all">Expand Subtasks</button>
-			<button id="table_TEvsOE" type="button" class="btn btn-success btn-show_TEvsOE">Show TE vs OE</button>
+			<button id="table_TSvsOE" type="button" class="btn btn-success btn-show_TSvsOE">Show TS vs OE</button>
 		</div>
 			
 	</div>
@@ -35,22 +35,23 @@
 			
 			<thead id="table_stories_header">
 				<tr>
-					<th>Issue Key</th>
-					<th>Issue Type      </th>
+					<th class="cell_key">Issue Key</th>
+					<th class="cell_issuetype">Issue Type</th>
 					<th class="cell_summary">Summary</th>
-					<th>Subtask   </th>
+					<th class="cell_subtasks">Subtask</th>
 					<th>Status               </th>
 					<th>Assignee      </th>
-					<th>Original Estimate</th>
-					<th>Time Spent</th>
-					<th>Remaining Time</th>
+					<th class="cell_time">Original Estimate</th>
+					<th class="cell_time">Time Spent</th>
+					<th class="cell_time">Remaining Time</th>
 					<th colspan="2">Progress</th>
-					<th class="cell_TEvsOE" colspan="1">TS vs OE</th>
-					<th class="cell_TEvsOE"></th>
+					<th class="cell_TSvsOE" colspan="2">TS vs OE</th>
+					<!-- <th class="cell_TSvsOE"></th> -->
 					<th>To Do </th>
 					<th>In Dev</th>
 					<th>DevRev</th>
 					<th>Aw UAT</th>
+					<th>Re Opd</th>
 					<th>Done  </th>
 				</tr>
 			</thead>
@@ -59,25 +60,26 @@
 				{% for issue in stories %}
 					<tr class="row_story">
 
-						<td><a href="{{ issue.self }}">{{ issue.key }}</a></td>
-						<td><img src="{{ issue.issuetypeIcon }}" height="15" width="15"> {{ issue.issuetype }}</td>
+						<td class="cell_key"><a href="{{ issue.self }}">{{ issue.key }}</a></td>
+						<td class="cell_issuetype"><img src="{{ issue.issuetypeIcon }}" height="15" width="15"> {{ issue.issuetype }}</td>
 						<td class="cell_summary">{{ issue.summary }}</td>
-						<td style="text-align: center;">{{ issue.subtasks|length }}</td>
-						<td>{{ issue.status }}</td>
-						<td>{{ issue.assignee }}</td>
+						<td class="cell_subtasks" style="text-align: center;">{{ issue.subtasks|length }}</td>
+						<td class="cell_status">{{ issue.status }}</td>
+						<td class="cell_assignee">{{ issue.assignee }}</td>
 						<td class="cell_time" actual="{{ issue.aggregatetimeoriginalestimate }}">{% if issue.aggregatetimeoriginalestimate != None %}{{ issue.aggregatetimeoriginalestimate_str }}{% endif %}</td>
 						<td class="cell_time" actual="{{ issue.aggregatetimespent }}">{% if issue.aggregatetimespent != None %}{{ issue.aggregatetimespent_str }}{% endif %}</td>
 						<td class="cell_time" actual="{{ issue.aggregatetimeestimate }}">{% if issue.aggregatetimeestimate != None %}{{ issue.aggregatetimeestimate_str }}{% endif %}</td>
 						<td class="cell_progress_percentage">{% if issue.progress != None %}{{ issue.progress }}%{% endif %}</td>
 						<td class="cell_progress"><div class="progress" style="height: 10px; width: 100%"><div class="progress-bar" style="height: 10px; width: {{ issue.progress }}%"></div></div></td>
 						
-						<td class="cell_TEvsOE" actual="{{ issue.TEvsOE.value }}">{% if issue.TEvsOE.value != None %}{{ issue.TEvsOE.rendered }}{% endif %}</td>
-						<td class="cell_TEvsOE"><div class="alert alert-{{ issue.TEvsOE.traffic_light }}">{% if issue.TEvsOE.value != None %}{{ issue.TEvsOE.percentage }}%{% endif %}</div></td>
+						<td class="cell_TSvsOE cell_TSvsOE-time" actual="{{ issue.TSvsOE.value }}">{% if issue.TSvsOE.value != None %}{{ issue.TSvsOE.rendered }}{% endif %}</td>
+						<td class="cell_TSvsOE cell_TSvsOE-trafflic_light"><div class="alert alert-{{ issue.TSvsOE.traffic_light }}">{% if issue.TSvsOE.value != None %}{{ issue.TSvsOE.percentage }}%{% endif %}</div></td>
 
 						<td class="cell_status_count">{% if issue.subtask_status_count['To Do'] > 0 %}{{ issue.subtask_status_count['To Do'] }}{% endif %}</td>
 						<td class="cell_status_count">{% if issue.subtask_status_count['Dev In Progress'] > 0 %}{{ issue.subtask_status_count['Dev In Progress'] }}{% endif %}</td>
 						<td class="cell_status_count">{% if issue.subtask_status_count['Dev Review'] > 0 %}{{ issue.subtask_status_count['Dev Review'] }}{% endif %}</td>
 						<td class="cell_status_count">{% if issue.subtask_status_count['Awaiting UAT'] > 0 %}{{ issue.subtask_status_count['Awaiting UAT'] }}{% endif %}</td>
+						<td class="cell_status_count">{% if issue.subtask_status_count['Reopened'] > 0 %}{{ issue.subtask_status_count['Reopened'] }}{% endif %}</td>
 						<td class="cell_status_count">{% if issue.subtask_status_count['Done'] > 0 %}{{ issue.subtask_status_count['Done'] }}{% endif %}</td>
 						
 
@@ -91,21 +93,22 @@
 									<td><img src="{{ subtask.issuetypeIcon }}" height="15" width="15"> {{ subtask.issuetype }}</td>
 									<td class="cell_summary">{{ subtask.summary }}</td>
 									<td>{{ subtask.devteam }}</td>
-									<td>{{ subtask.status }}</td>
+									<td>{{ subtask.status }}{% if subtask.completed_in_sprint != this_sprint.id and subtask.completed_in_sprint != None %} [{{ subtask.completed_in_sprint }}]{% endif %}</td>
 									<td>{{ subtask.assignee }}</td>
-									<td class="cell_time" actual="{{ subtask.aggregatetimeoriginalestimate }}">{% if subtask.aggregatetimeoriginalestimate != None %}{{ subtask.aggregatetimeoriginalestimate_str }}{% endif %}</td>
-									<td class="cell_time" actual="{{ subtask.aggregatetimespent }}">{% if subtask.aggregatetimespent != None %}{{ subtask.aggregatetimespent_str }}{% endif %}</td>
-									<td class="cell_time" actual="{{ subtask.aggregatetimeestimate }}">{% if subtask.aggregatetimeestimate != None %}{{ subtask.aggregatetimeestimate_str }}{% endif %}</td>
+									<td class="cell_time" actual="{{ subtask.timeoriginalestimate }}">{% if subtask.timeoriginalestimate != None %}{{ subtask.timeoriginalestimate_rendered }}{% endif %}</td>
+									<td class="cell_time" actual="{{ subtask.timespent }}">{% if subtask.timespent != None %}{{ subtask.timespent_rendered }}{% endif %}</td>
+									<td class="cell_time" actual="{{ subtask.timeestimate }}">{% if subtask.timeestimate != None %}{{ subtask.timeestimate_rendered }}{% endif %}</td>
 									<td class="cell_progress_percentage">{% if subtask.progress != None %}{{ subtask.progress }}%{% endif %}</td>
 									<td class="cell_progress"><div class="progress" style="height: 10px; width: 100%"><div class="progress-bar bg-warning" style="height: 10px; width: {{ subtask.progress }}%"></div></div></td>
 									
-									<td class="cell_TEvsOE" actual="{{ subtask.TEvsOE.value }}">{% if subtask.TEvsOE.value != None %}{{ subtask.TEvsOE.rendered }}{% endif %}</td>
-									<td class="cell_TEvsOE"><div class="alert alert-{{ subtask.TEvsOE.traffic_light }}">{% if subtask.TEvsOE.value != None %}{{ subtask.TEvsOE.percentage }}%{% endif %}</div></td>
+									<td class="cell_TSvsOE" actual="{{ subtask.TSvsOE.value }}">{% if subtask.TSvsOE.value != None %}{{ subtask.TSvsOE.rendered }}{% endif %}</td>
+									<td class="cell_TSvsOE"><div class="alert alert-{{ subtask.TSvsOE.traffic_light }}">{% if subtask.TSvsOE.value != None %}{{ subtask.TSvsOE.percentage }}%{% endif %}</div></td>
 									
 									<td class="cell_status_count">{% if subtask.status == 'To Do' %}*{% endif %}</td>
 									<td class="cell_status_count">{% if subtask.status == 'Dev In Progress' %}*{% endif %}</td>
 									<td class="cell_status_count">{% if subtask.status == 'Dev Review' %}*{% endif %}</td>
 									<td class="cell_status_count">{% if subtask.status == 'Awaiting UAT' %}*{% endif %}</td>
+									<td class="cell_status_count">{% if subtask.status == 'Reopened' %}*{% endif %}</td>
 									<td class="cell_status_count">{% if subtask.status == 'Done' %}*{% endif %}</td>
 									
 								</tr>
@@ -117,25 +120,25 @@
 					</tr>
 				{% endfor %}
 			</tbody>
+
 			<tfoot>
 				<th></th>
 				<th></th>
+				<th class="cell_summary"></th>
 				<th></th>
 				<th></th>
 				<th></th>
-				<th></th>
-				<th>{{ sprint_summary['aggregatetimeoriginalestimate_rendered'] }}</th>
-				<th>{{ sprint_summary['aggregatetimespent_rendered'] }}</th>
-				<th>{{ sprint_summary['aggregatetimeestimate_rendered'] }}</th>
+				<th class="cell_time">{{ sprint_summary['aggregatetimeoriginalestimate_rendered'] }}</th>
+				<th class="cell_time">{{ sprint_summary['aggregatetimespent_rendered'] }}</th>
+				<th class="cell_time">{{ sprint_summary['aggregatetimeestimate_rendered'] }}</th>
 				<th class="cell_progress_percentage">{{ sprint_summary['progress'] }}%</th>
 				<th></th>
-				<th class="cell_TEvsOE"></th>
-				<th class="cell_TEvsOE"></th>
-
+				<th class="cell_TSvsOE" colspan="2" style="text-align: left;" >TS < OE: {{ sprint_summary['accuracy']['over_estimates']['TSvsOE_rendered'] }}<div>TS > OE: {{ sprint_summary['accuracy']['under_estimates']['TSvsOE_rendered'] }}</div></th>
 				<th class="cell_status_count">{{ sprint_summary['subtask_status']['To Do'] }}</th>
 				<th class="cell_status_count">{{ sprint_summary['subtask_status']['Dev In Progress'] }}</th>
 				<th class="cell_status_count">{{ sprint_summary['subtask_status']['Dev Review'] }}</th>
 				<th class="cell_status_count">{{ sprint_summary['subtask_status']['Awaiting UAT'] }}</th>
+				<th class="cell_status_count">{{ sprint_summary['subtask_status']['Reopened'] }}</th>
 				<th class="cell_status_count">{{ sprint_summary['subtask_status']['Done'] }}</th>
 			</tfoot>
 
@@ -182,25 +185,25 @@
 	<br>
 
 	<div class="row">
-		<div class="col-lg-8">
+		<div class="col-xl-8">
 			<table class="table table-condensed">
 			<thead>
 				<tr>
-					<th></th>
+					<th class="defectTable_col_storyKey">Story Key</th>
 					
 					{% for key in defects['defects_total_count'] if key != 'Total' %}
-						<th>{{ key }}</th>
+						<th class="defectTable_col_defectType">{{ key }}</th>
 					{% endfor %}
-					<th>Total</th>
-					<th>Time Spent</th>
-					<th>Average</th>
+					<th class="defectTable_col_total">Total</th>
+					<th class="defectTable_col_timespent">Time Spent</th>
+					<th class="defectTable_col_average">Average</th>
 				</tr>
 			</thead>
 
 			<tbody>
 				{% for story in defects['stories_with_defects'] %}
-					<tr>
-						<td><a href="{{ story['self'] }}">{{ story['key'] }}</a></td>
+					<tr class="defectTable_row">
+						<td><img src="{{ story.issuetypeIcon }}" height="15" width="15"><a href="{{ story['self'] }}"> {{ story['key'] }}</a></td>
 						
 						{% for key in defects['defects_total_count'] if key != 'Total' %}
 							<td>{% if key in story['subtask_rootcauses'] %}{{ story['subtask_rootcauses'][key]['count'] }}{% else %}{% endif %}</td>
@@ -250,8 +253,8 @@
 			</tfoot>				
 			</table>
 		</div>
-		<div class="col-lg-4 chart_div">
-			<canvas id="defect_chart" class="" width="400" height="400"></canvas>
+		<div class="col-xl-4 chart_div">
+			<canvas id="defect_chart" class="" max-width="400" max-height="400"></canvas>
 		</div>
 	</div>
 
@@ -292,24 +295,24 @@
 		$(this).text("Expand Subtasks");
 	})
 
-	$('div.row').on('click', 'button.btn-show_TEvsOE', function(event){
-		$('td.cell_TEvsOE').show();
-		$('th.cell_TEvsOE').show();
+	$('div.row').on('click', 'button.btn-show_TSvsOE', function(event){
+		$('td.cell_TSvsOE').show();
+		$('th.cell_TSvsOE').show();
 		$(this).removeClass("btn-success");
 		$(this).addClass("btn-warning");
-		$(this).removeClass("btn-show_TEvsOE");
-		$(this).addClass("btn-hide_TEvsOE");
-		$(this).text("Hide TE vs OE");
+		$(this).removeClass("btn-show_TSvsOE");
+		$(this).addClass("btn-hide_TSvsOE");
+		$(this).text("Hide TS vs OE");
 	})
 
-	$('div.row').on('click', 'button.btn-hide_TEvsOE', function(event){
-		$('td.cell_TEvsOE').attr("style", "display: none;");
-		$('th.cell_TEvsOE').attr("style", "display: none;");
+	$('div.row').on('click', 'button.btn-hide_TSvsOE', function(event){
+		$('td.cell_TSvsOE').attr("style", "display: none;");
+		$('th.cell_TSvsOE').attr("style", "display: none;");
 		$(this).removeClass("btn-warning");
 		$(this).addClass("btn-success");
-		$(this).removeClass("btn-hide_TEvsOE");
-		$(this).addClass("btn-show_TEvsOE");
-		$(this).text("Show TE vs OE");
+		$(this).removeClass("btn-hide_TSvsOE");
+		$(this).addClass("btn-show_TSvsOE");
+		$(this).text("Show TS vs OE");
 	})
 
 </script>
@@ -517,20 +520,24 @@
 			datasets: [{	
 				data: [{% for d in defects['defects_total_count'] if d != 'Total' %}{{ (defects['defects_total_count'][d]['timespent'] / (60 * 60)) | round(1, 'common') }},{% endfor %}],
 	            backgroundColor: [
-		            'rgba(255, 99, 132, 0.2)',
-		            'rgba(54, 162, 235, 0.2)',
-		            'rgba(255, 206, 86, 0.2)',
-		            'rgba(75, 192, 192, 0.2)',
-		            'rgba(153, 102, 255, 0.2)',
-		            'rgba(255, 159, 64, 0.2)'
+		            '#E57373',
+		            '#7986CB',
+		            '#4DB6AC',
+		            '#FFF176',
+		            '#BA68C8',
+		            '#4FC3F7',
+		            '#AED581',
+		            '#FFB74D',
             	],
             	borderColor: [
-	                'rgba(255,99,132,1)',
-	                'rgba(54, 162, 235, 1)',
-	                'rgba(255, 206, 86, 1)',
-	                'rgba(75, 192, 192, 1)',
-	                'rgba(153, 102, 255, 1)',
-	                'rgba(255, 159, 64, 1)'
+	                '#D32F2F',
+	                '#303F9F',
+	                '#00796B',
+	                '#FBC02D',
+	                '#7B1FA2',
+	                '#0288D1',
+	                '#689F38',
+	                '#F57C00',
             	],
             	borderWidth: 1,
 
@@ -550,7 +557,7 @@
     		],
 
     		legend: {
-    			position: 'bottom',
+    			position: 'right',
     		},
     	},
 

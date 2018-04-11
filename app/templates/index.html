@@ -5,6 +5,7 @@
 
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles/style.css') }}">
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
 	<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
@@ -28,20 +29,26 @@
 				{% block title %}
 				{% endblock %}
 				
-				
-				<div id="sprint_input_group" class="input-group">
-					<div class="input-group-prepend">
-						<span class="input-group-text">Sprint No:</span>
-					</div>
-					<input id="sprint_input" type="text" class="form-control" value="">
-				</div>		
+				<div class="row" style="margin-left: 0px">
 
-				<div class="dropdown">
-					<button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Sprints</button>
-					<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-						{% for sprint in all_sprints %}<a class="dropdown-item" id="{{ sprint['id'] }}" href="{{ url_for('index') }}sprint/{{ sprint['id'] }}">{{ sprint['name'] }}</a>{% endfor %}
+					<div class="dropdown" style="margin-right: 10px">
+						<button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Sprints</button>
+						<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+							{% for sprint in all_sprints %}<a class="dropdown-item" id="{{ sprint['id'] }}" href="{{ url_for('index') }}sprint/{{ sprint['id'] }}">{{ sprint['name'] }}</a>{% endfor %}
+						</div>
 					</div>
+
+					<div id="sprint_input_group" class="input-group">
+						<div class="input-group-prepend">
+							<span class="input-group-text">Sprint No:</span>
+						</div>
+						<input id="sprint_input" type="text" class="form-control" value="{% if this_sprint is defined %}{{ this_sprint['id'] }}{% endif %}">
+					</div>
+
+
+
 				</div>
+
 			</div>
 <!-- 
 			<div class="col-md-4">	
@@ -77,6 +84,10 @@
 			window.location.replace(window.location.origin + "/sprint/" + $(this).val())
 		}
 	});
+
+	$(function () {
+  		$('[data-toggle="tooltip"]').tooltip()
+	})
 
 
 	// window.onscroll = function() {myFunction()};

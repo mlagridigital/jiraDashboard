@@ -87,36 +87,25 @@ tr.row_subtask {
 	display: none;
 }
 
+td {
+	height: 38px;
+}
+
+td.cell_key {
+/*	width: 75px;*/
+	min-width: 75px;
+	max-width: 100px;
+}
+
+td.cell_issuetype {
+	/*width: 120px;*/
+	min-width: 120px;
+	max-width: 125px;
+}
+
 td.cell_summary {
 	white-space: normal;
 }
-
-td.cell_time {
-	text-align: right;
-}
-
-td.cell_status_count {
-	text-align: center;
-}
-
-td.cell_progress {
-	vertical-align: middle;
-}
-
-td.cell_progress_percentage {
-	vertical-align: middle;
-	text-align: : right;
-}
-
-.progress {
-	min-width: 80px;
-}
-
-/*@media only screen and (min-width: 1920px) {
-	.progress {
-		min-width: 150px;
-	}
-}*/
 
 th.cell_summary, td.cell_summary {
 	display: none;
@@ -125,8 +114,54 @@ th.cell_summary, td.cell_summary {
 @media only screen and (min-width: 1920px){
 	th.cell_summary, td.cell_summary {
 		display: table-cell;
+		max-width: 600px;
 	}
 }
+
+
+td.cell_subtasks {
+	min-width: 85px;
+	max-width: 110px;
+}
+
+td.cell_status {
+	min-width: 100px;
+	max-width: 125px;
+}
+
+td.cell_assignee {
+	min-width: 120px;
+	max-width: 145px;	
+}
+
+th.cell_time, td.cell_time {
+	min-width: 110px;
+	max-width: 135px;
+	text-align: right;
+}
+
+
+td.cell_progress_percentage {
+	vertical-align: middle;
+	text-align: : right;
+	min-width: 45px;
+	max-width: 70px;
+}
+
+td.cell_progress {
+	vertical-align: middle;
+	min-width: 80px;
+	max-width: 115px;
+}
+
+
+
+/*@media only screen and (min-width: 1920px) {
+	.progress {
+		min-width: 150px;
+	}
+}*/
+
 
 .traffic_light {
   height: 20px;
@@ -169,23 +204,40 @@ th.cell_summary, td.cell_summary {
 }
 
 .alert-overruning {
-	color: #731c73;
-	background-color: #f8d8f0;
-	border-color: #f5c7de;
+	color: #FFFFFF;
+	background-color: #000000;
+	border-color: #000000;
 }
 
-.cell_TEvsOE {
+.cell_TSvsOE {
 	display: none;
 }
 
-th.cell_TEvsOE {
+th.cell_TSvsOE {
 	text-align: center;
 }
 
-td.cell_TEvsOE {
+td.cell_TSvsOE {
 	text-align: right;
 }
 
+
+
+td.cell_TSvsOE.cell_TSvsOE-time {
+	min-width: 100px;
+	max-width: 125px;
+}
+
+td.cell_TSvsOE.cell_TSvsOE-trafflic_light {
+	min-width: 45px;
+	width: 45px;
+}
+
+th.cell_status_count, td.cell_status_count {
+	text-align: center;
+	min-width: 65px;
+	max-width: 80px;
+}
 
 .chart_div {
 	display: block;
@@ -199,4 +251,36 @@ td.cell_TEvsOE {
 	top: 0;
 	width: 100%
 }*/
+
+tr.defectTable_row {
+	background-color: rgba(235, 237, 240, 0.4);
+}
+
+th.defectTable_col_storyKey{
+	min-width: 80px;
+	width: 80px;
+}
+
+th.defectTable_col_defectType {
+	min-width: 100px;
+	width: 100px;
+}
+
+th.defectTable_col_total{
+	min-width: 60px;
+	width: 60px;
+}
+
+th.defectTable_col_timespent {
+	min-width: 100px;
+	width: 100px;
+}
+
+th.defectTable_col_average {
+	min-width: 60px;
+	width: 60px;
+}
+
+
+
 

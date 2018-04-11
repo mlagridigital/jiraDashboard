@@ -19,7 +19,7 @@ def get_issues(sprint, search=None):
             "jql": "project = ADS AND sprint = " + str(sprint) + " AND type in standardIssueTypes()",
             "maxResults": "100",
             "startAt": 0,
-            "fields": "status, subtasks, issuetype, summary, aggregatetimespent, aggregatetimeoriginalestimate, aggregatetimeestimate, customfield_10016, assignee, created, timespent, timeoriginalestimate, timeestimate",
+            "fields": "status, subtasks, issuetype, summary, aggregatetimespent, aggregatetimeoriginalestimate, aggregatetimeestimate, customfield_10016, assignee, created, timespent, timeoriginalestimate, timeestimate, resolutiondate",
             "expand": "changelog",
         }
     elif search == "subtasks":
@@ -27,7 +27,7 @@ def get_issues(sprint, search=None):
             "jql": "project = ADS AND sprint = " + str(sprint) + " AND type in subtaskIssueTypes()",
             "maxResults": "100",
             "startAt": 0,
-            "fields": "status, issuetype, summary, aggregatetimespent, aggregatetimeoriginalestimate, aggregatetimeestimate, customfield_10016, assignee, created, timespent, timeoriginalestimate, timeestimate, customfield_11222",
+            "fields": "status, issuetype, summary, aggregatetimespent, aggregatetimeoriginalestimate, aggregatetimeestimate, customfield_10016, assignee, created, timespent, timeoriginalestimate, timeestimate, customfield_11222, resolutiondate",
             "expand": "changelog",
         }
     else:
@@ -154,6 +154,7 @@ def format_data(stories, subtasks):
 
     # Support Issues are filtered, total support issues are counted and timespent is summed
     supportIssues = {
+        "iconUrl": "https://fullprofile.atlassian.net/secure/viewavatar?size=xsmall&avatarId=10304&avatarType=issuetype",
         "count": 0,
         "timespent": 0,
     }
@@ -200,6 +201,8 @@ def format_data(stories, subtasks):
             "status": issue['fields']['status']['name'],
             "issuetype": issue['fields']['issuetype']['name'],
             "issuetypeIcon": issue['fields']['issuetype']['iconUrl'],
+
+            "resolutiondate": dateutil.parser.parse(issue['fields']['resolutiondate']) if issue['fields']['resolutiondate'] else None,
             
             "timespent": issue['fields']['timespent'],
             "timeoriginalestimate": issue['fields']['timeoriginalestimate'],
@@ -217,7 +220,7 @@ def format_data(stories, subtasks):
             "changelog": format_changelog(issue['changelog']),
 
             "progress": calc_progress(issue['fields']['aggregatetimeoriginalestimate'], issue['fields']['aggregatetimeestimate']),
-            "TEvsOE": timespent_vs_originalestimate(issue['fields']['aggregatetimeoriginalestimate'], issue['fields']['aggregatetimespent'], issue['fields']['status']['name']),
+            "TSvsOE": timespent_vs_originalestimate(issue['fields']['aggregatetimeoriginalestimate'], issue['fields']['aggregatetimespent'], issue['fields']['status']['name']),
 
             "subtasks": [],
             "subtask_status_count": {
@@ -233,7 +236,7 @@ def format_data(stories, subtasks):
             "subtask_rootcauses_timespent": 0,
         }
 
-        print('DateCreated:', newStory['created'], '|', 'Sprint', newStory['sprints'][0]['id'], 'start:', newStory['sprints'][0]['startDate'])
+        print('DateCreated:', newStory['created'])
         print('Sprints:', [i['id'] for i in newStory['sprints']])
         # print('SPRINTS:', json.dumps(newStory['sprints'], indent = 4))
 
@@ -260,10 +263,16 @@ def format_data(stories, subtasks):
                         
                         "issuetype": s['fields']['issuetype']['name'],
                         "issuetypeIcon": s['fields']['issuetype']['iconUrl'],
+
+                        "resolutiondate": dateutil.parser.parse(s['fields']['resolutiondate']) if s['fields']['resolutiondate'] else None,
                         
                         "timespent": s['fields']['timespent'],
                         "timeoriginalestimate": s['fields']['timeoriginalestimate'],
                         "timeestimate": s['fields']['timeestimate'],
+                        "timespent_rendered": format_time(s['fields']['timespent']),
+                        "timeoriginalestimate_rendered": format_time(s['fields']['timeoriginalestimate']),
+                        "timeestimate_rendered": format_time(s['fields']['timeestimate']),
+
 
                         "aggregatetimespent": s['fields']['aggregatetimespent'],
                         "aggregatetimeoriginalestimate": s['fields']['aggregatetimeoriginalestimate'],
@@ -279,9 +288,11 @@ def format_data(stories, subtasks):
                         "devteam": "",
 
                         "progress": calc_progress(s['fields']['timeoriginalestimate'], s['fields']['timeestimate']),
-                        "TEvsOE": timespent_vs_originalestimate(s['fields']['timeoriginalestimate'], s['fields']['timespent'], s['fields']['status']['name']),
+                        "TSvsOE": timespent_vs_originalestimate(s['fields']['timeoriginalestimate'], s['fields']['timespent'], s['fields']['status']['name']),
 
-                        "rootcause": s['fields']['customfield_11222']['value'] if s['fields']['customfield_11222'] else None
+                        "rootcause": s['fields']['customfield_11222']['value'] if s['fields']['customfield_11222'] else None,
+
+                        "sprint_completed_in": None,
 
                     }
 
@@ -307,9 +318,11 @@ def format_data(stories, subtasks):
                         print("Error: subtask",
                               newSubtask['key'], "not set to team")
 
-                    print('DateCreated:', dateutil.parser.parse(issue['fields']['created']), '|', 'Sprint', newSubtask['sprints'][0]['id'], 'start:', newSubtask['sprints'][0]['startDate'])
-                    print('Sprints:', [i['id'] for i in newSubtask['sprints']])
-                                       
+                    print('DateCreated:', dateutil.parser.parse(issue['fields']['created']))
+                    print('Sprints:', [[i['id'], str(i['startDate']), str(i['endDate'])] for i in newSubtask['sprints']])
+
+                    newSubtask["completed_in_sprint"] = issue_completed_in_sprint_number(newSubtask['resolutiondate'], newSubtask['sprints'])
+
                     newStory['subtasks'].append(newSubtask)
 
                     # Increase count for subtask status in the story
@@ -319,14 +332,19 @@ def format_data(stories, subtasks):
 
 
                     # If subtask has rootcause increase count of rootcause in the story & and aggreate timespent on rootcauses
-                    if s['fields']['customfield_11222']:
-                        rootcause = s['fields']['customfield_11222']['value']
-                        
+                    if s['fields']['issuetype']['name'] == 'Defect':
+
+                        # Specify rootcause name
+                        if s['fields']['customfield_11222']:
+                            rootcause = s['fields']['customfield_11222']['value']
+                        else:
+                            rootcause = 'Rootcause not specified'
+                       
+                       # If rootcas
                         if rootcause in newStory['subtask_rootcauses']:
                             newStory['subtask_rootcauses'][rootcause]['count'] += 1
                             if newSubtask['timespent']:
                                 newStory['subtask_rootcauses'][rootcause]['timespent'] += newSubtask['timespent']
-                        
                         else:
                             newStory['subtask_rootcauses'][rootcause] = {
                                 'count': 1,
@@ -340,9 +358,8 @@ def format_data(stories, subtasks):
                             newStory['subtask_rootcauses_timespent'] += newSubtask['timespent']
 
 
-
         storiesFormated.append(newStory)
-        print("STORY ROOT CAUSE:", json.dumps(newStory['subtask_rootcauses'], indent = 4))
+        print(newStory['key'], "STORY ROOT CAUSE:", json.dumps(newStory['subtask_rootcauses'], indent = 4))
 
     data = {
         "stories": storiesFormated,
@@ -364,8 +381,11 @@ def format_time(time):
     """
 
     if not isinstance(time, int):
-        print("Error time is not int, time is:", time)
+        print("Error [format_time] - time is not int, time is:", time)
         return time
+
+    if time == 0:
+        return "0d"
 
     time = abs(time)
 
@@ -403,19 +423,15 @@ def format_sprints(sprints):
             value = i.split('=')[1]
             temp[key] = value
 
-        print(temp['startDate'])
-
         sprintsFormatted.append({
             "current": "",
-            "id": temp['id'],
+            "id": int(temp['id']),
             "state": temp['state'],
             "name": temp['name'],
             "startDate": dateutil.parser.parse(temp['startDate']),
             "endDate": dateutil.parser.parse(temp['endDate']),
             "completeDate": temp['completeDate']
         })
-
-        print(dateutil.parser.parse(temp['startDate']))
 
 
     return sprintsFormatted
@@ -544,7 +560,7 @@ def timespent_vs_originalestimate(originalestimate, timespent, status):
             percentage = -1 * percentage
 
     else:
-        print("ERROR: [timespent_vs_originalestimate] - Time not int [OE:", originalestimate, ", TE:", timespent, "]")
+        print("ERROR: [timespent_vs_originalestimate] - Time not int [OE:", originalestimate, ", TS:", timespent, "]")
         difference = None
         percentage = None
 
@@ -553,23 +569,26 @@ def timespent_vs_originalestimate(originalestimate, timespent, status):
 
 def traffic_light(percentage, status):
 
-    if status == 'Done':
-        if percentage == None:
-            return None
-        elif percentage < 0:
-            return 'info'
-        elif percentage <= 10:
-            return 'success'
-        elif percentage <= 50:
-            return 'warning'
-        else:
-            return 'danger'
 
-    elif percentage != None and percentage >= 10:
-        return 'overruning'
-
+    if percentage == None:
+        return ''
     else:
-        return 'inProgress'
+        
+        if status == 'Done':
+            if  percentage < 0:
+                return 'info'
+            elif percentage <= 10:
+                return 'success'
+            elif percentage <= 50:
+                return 'warning'
+            else:
+                return 'danger'
+
+        elif percentage >= 10:
+            return 'overruning'
+        else:
+            return 'dark'
+
 
 def calc_dif(to, _from):
 
@@ -581,6 +600,27 @@ def calc_dif(to, _from):
     dif = int(to) - int(_from)
 
     return dif
+
+
+def issue_completed_in_sprint_number(resolutiondate, sprints):
+
+    if resolutiondate != None:
+        
+        sprints.sort(key=lambda e: e['startDate'])
+
+        for sprint in sprints:
+            if resolutiondate <= sprint['endDate']:
+                print("Issue completed in sprint:", sprint['id'])
+                # print(type(sprint['id']))
+                # print((sprint['id']))
+                return sprint['id']
+        else:
+            print("ERROR: [issue_completed_in_sprint_number] - resolutiondate not in sprints, resolutiondate:", str(resolutiondate))
+            return None
+    else:
+        print("Issue completed in sprint: Still in progress")
+        return None
+        # resolutiondate
 
 
 # ------------------ BURNDOWN ------------------ #
@@ -786,7 +826,6 @@ def get_startdate(story, issue):
 
 
 
-
 # ------------------ RETRO ------------------ #
 
 def get_defects(stories):
@@ -796,23 +835,24 @@ def get_defects(stories):
     stories_with_defects = []
     defects_total_count = {}
 
-    for s in stories:
-        if s['subtask_rootcauses']:
+    for story in stories:
+        if story['subtask_rootcauses']:
             
-            timespent_on_defects = sum([s['subtask_rootcauses'][x]['timespent'] for x in s['subtask_rootcauses']])
+            timespent_on_defects = sum([story['subtask_rootcauses'][x]['timespent'] for x in story['subtask_rootcauses']])
 
             story_with_defect = {
-                'key': s['key'],
-                'self': s['self'],
-                'subtask_rootcauses': s['subtask_rootcauses'],
-                'total_count': sum([s['subtask_rootcauses'][x]['count'] for x in s['subtask_rootcauses']]),
+                'key': story['key'],
+                'self': story['self'],
+                'issuetypeIcon' :story['issuetypeIcon'],
+                'subtask_rootcauses': story['subtask_rootcauses'],
+                'total_count': sum([story['subtask_rootcauses'][x]['count'] for x in story['subtask_rootcauses']]),
                 'timespent_on_defects': timespent_on_defects,
                 'timespent_on_defects_rendered': format_time(timespent_on_defects),
             }
 
             stories_with_defects.append(story_with_defect)
 
-            for key, value in s['subtask_rootcauses'].items():
+            for key, value in story['subtask_rootcauses'].items():
 
                 # print("HERE: ", key, value)
 
@@ -836,11 +876,11 @@ def get_defects(stories):
         'timespent_rendered': format_time(sum([defects_total_count[x]['timespent'] for x in defects_total_count])),
     }
 
-    # print("----- DEFECTS -----")
-    # print(json.dumps(defects_total_count, indent = 4))
+    print("----- DEFECTS -----")
+    print(json.dumps(defects_total_count, indent = 4))
 
-    # print("----- STORY DEFECT -----")
-    # print(json.dumps(stories_with_defects, indent = 4))
+    print("----- STORY DEFECT -----")
+    print(json.dumps(stories_with_defects, indent = 4))
     
 
     return {'stories_with_defects': stories_with_defects, 'defects_total_count': defects_total_count}
@@ -863,8 +903,32 @@ def summarise_sprint(stories):
             'Reopened': 0
         },
         'TSvsOE': {},
-
+        'accuracy' : {
+            'over_estimates': {
+                'count': 0,
+                'TSvsOE': 0,
+                'TSvsOE_rendered': "",
+            },
+            'under_estimates': {
+                'count': 0,
+                'TSvsOE': 0,
+                'TSvsOE_rendered': "",
+            },
+            'on_estimates': {
+                'count': 0
+            },
+        },
+        'issuetype_count': {
+            'Story': 0,
+            'Bug': 0,
+            'Task': 0,
+            'Tech-debt': 0,
+            'Defect': 0,
+            'Sub-task': 0,
+            'Testing task': 0,
+        },
     }
+
 
     for story in stories:
 
@@ -875,6 +939,7 @@ def summarise_sprint(stories):
         if story['aggregatetimeoriginalestimate']:
             sprint_summary['aggregatetimeoriginalestimate'] += story['aggregatetimeoriginalestimate']
 
+        # sprint_summary['subtask_status'][story['status']] += 1 ## WORTH ADDING TO INCREASE BY STATUS OF STORY?
         sprint_summary['subtask_status']['To Do'] += story['subtask_status_count']['To Do']
         sprint_summary['subtask_status']['Dev In Progress'] += story['subtask_status_count']['Dev In Progress']
         sprint_summary['subtask_status']['Dev Review'] += story['subtask_status_count']['Dev Review']
@@ -882,6 +947,24 @@ def summarise_sprint(stories):
         sprint_summary['subtask_status']['Done'] += story['subtask_status_count']['Done']
         sprint_summary['subtask_status']['Reopened'] += story['subtask_status_count']['Reopened']
 
+        sprint_summary['issuetype_count'][story['issuetype']] += 1
+
+        for subtask in story['subtasks']:
+
+            sprint_summary['issuetype_count'][subtask['issuetype']] += 1
+
+            if subtask['status'] == 'Done' and subtask['TSvsOE']['value'] != None:
+                
+                if subtask['TSvsOE']['value'] > 0:
+                    sprint_summary['accuracy']['over_estimates']['count'] += 1
+                    sprint_summary['accuracy']['over_estimates']['TSvsOE'] += subtask['TSvsOE']['value']
+
+                if subtask['TSvsOE']['value'] < 0:
+                    sprint_summary['accuracy']['under_estimates']['count'] += 1
+                    sprint_summary['accuracy']['under_estimates']['TSvsOE'] += subtask['TSvsOE']['value']
+                    
+                if subtask['TSvsOE']['value'] == 0:
+                    sprint_summary['accuracy']['on_estimates']['count'] += 1
 
     sprint_summary['progress'] = calc_progress(sprint_summary['aggregatetimeoriginalestimate'], sprint_summary['aggregatetimeestimate'])
     sprint_summary['TSvsOE'] = timespent_vs_originalestimate(sprint_summary['aggregatetimeoriginalestimate'], sprint_summary['aggregatetimespent'], '')
@@ -889,6 +972,10 @@ def summarise_sprint(stories):
     sprint_summary['aggregatetimespent_rendered'] = format_time(sprint_summary['aggregatetimespent'])
     sprint_summary['aggregatetimeestimate_rendered'] = format_time(sprint_summary['aggregatetimeestimate'])
     sprint_summary['aggregatetimeoriginalestimate_rendered'] = format_time(sprint_summary['aggregatetimeoriginalestimate'])
+
+    sprint_summary['accuracy']['over_estimates']['TSvsOE_rendered'] = format_time(sprint_summary['accuracy']['over_estimates']['TSvsOE'])
+    sprint_summary['accuracy']['under_estimates']['TSvsOE_rendered'] = format_time(sprint_summary['accuracy']['under_estimates']['TSvsOE'])
+
 
     print(json.dumps(sprint_summary, indent = 4))
 
@@ -908,7 +995,7 @@ def start(sprint):
         'burndown': True,
     }
 
-    OFFLINE_MODE = True
+    OFFLINE_MODE = False
 
     if OFFLINE_MODE:
         with open('stories.pkl', 'rb') as f:
