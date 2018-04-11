@@ -58,6 +58,7 @@ def sprint_dashboard(sprint_id):
 		all_sprints = all_sprints,
 		this_sprint = this_sprint,
 		sprint_summary = sprint_summary,
+		support = (data['support']),
 		)
 
 @app.route('/sprint/<int:sprint_id>/data')
@@ -106,6 +107,7 @@ def json_data(sprint_id):
 		all_sprints = all_sprints,
 		this_sprint = this_sprint,
 		sprint_summary = sprint_summary,
+		support = (data['support']),
 		)
 
 

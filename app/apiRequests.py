@@ -17,6 +17,7 @@ def get_issues(sprint, search=None):
     if search == "stories":
         querystring = {
             "jql": "project = ADS AND sprint = " + str(sprint) + " AND type in standardIssueTypes()",
+            # "jql": "project = ADS AND type in standardIssueTypes()",
             "maxResults": "100",
             "startAt": 0,
             "fields": "status, subtasks, issuetype, summary, aggregatetimespent, aggregatetimeoriginalestimate, aggregatetimeestimate, customfield_10016, assignee, created, timespent, timeoriginalestimate, timeestimate, resolutiondate",
@@ -25,6 +26,7 @@ def get_issues(sprint, search=None):
     elif search == "subtasks":
         querystring = {
             "jql": "project = ADS AND sprint = " + str(sprint) + " AND type in subtaskIssueTypes()",
+            # "jql": "project = ADS AND type in subtaskIssueTypes()",
             "maxResults": "100",
             "startAt": 0,
             "fields": "status, issuetype, summary, aggregatetimespent, aggregatetimeoriginalestimate, aggregatetimeestimate, customfield_10016, assignee, created, timespent, timeoriginalestimate, timeestimate, customfield_11222, resolutiondate",
@@ -361,9 +363,12 @@ def format_data(stories, subtasks):
         storiesFormated.append(newStory)
         print(newStory['key'], "STORY ROOT CAUSE:", json.dumps(newStory['subtask_rootcauses'], indent = 4))
 
+
+    supportIssues['timespent_rendered'] = format_time(supportIssues['timespent'])
+
     data = {
         "stories": storiesFormated,
-        "support": supportIssues
+        "support": supportIssues,
     }
 
     return data
@@ -771,11 +776,12 @@ def adjust_burndown_startdate(subtask_raw_data, sprint_start, sprint_id):
 
     sprint_start = dateutil.parser.parse(sprint_start)
 
-    print("--", "Adjusting burndown to align with sprint", "|", "Sprint", str(sprint_id), "start:", str(sprint_start), "--")
+    if DEBUG['burndown']: print("--", "Adjusting burndown to align with sprint", "|", "Sprint", str(sprint_id), "start:", str(sprint_start), "--")
 
-    print('-burndown before-')
-    for line in subtask_raw_data:
-        print(str(line[0]).ljust(32), str(line[1]).rjust(7))
+    if DEBUG['burndown']:
+        print('-burndown before-')
+        for line in subtask_raw_data:
+            print(str(line[0]).ljust(32), str(line[1]).rjust(7))   
 
 
 
@@ -792,7 +798,7 @@ def adjust_burndown_startdate(subtask_raw_data, sprint_start, sprint_id):
         
         else:
             if total > 0:
-                print('summmed total to sprint_start:', total)
+                if DEBUG['burndown']: print('summmed total to sprint_start:', total)
                 new_point = [sprint_start, total]
                 subtask_burndown.append(new_point)
                 total = 0
@@ -802,15 +808,17 @@ def adjust_burndown_startdate(subtask_raw_data, sprint_start, sprint_id):
 
 
 
-    print('-burndown after-')
-    for line in subtask_burndown:
-        print(str(line[0]).ljust(32), str(line[1]).rjust(7))
+    if DEBUG['burndown']:
+        print('-burndown after-')
+        for line in subtask_burndown:
+            print(str(line[0]).ljust(32), str(line[1]).rjust(7))
 
 
     total_re_before = sum([x[1] for x in subtask_raw_data])
     total_re_after = sum([x[1] for x in subtask_burndown])
 
-    print('Sum of changelog before:', total_re_before, 'after:', total_re_after, total_re_after == total_re_before)
+    if total_re_after != total_re_before:
+        print('ERROR - [adjust_burndown_startdate] Sum of changelog before:', total_re_before, 'not equal to after:', total_re_after, )
 
     return subtask_burndown
 
@@ -995,7 +1003,7 @@ def start(sprint):
         'burndown': True,
     }
 
-    OFFLINE_MODE = False
+    OFFLINE_MODE = True
 
     if OFFLINE_MODE:
         with open('stories.pkl', 'rb') as f:
