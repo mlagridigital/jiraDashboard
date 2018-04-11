@@ -298,7 +298,7 @@ def format_data(stories, subtasks):
 
                     }
 
-                    print("ROOT CAUSE:", newSubtask['rootcause'])
+                    print("Root cause:", newSubtask['rootcause'])
 
                     # SANITY CHECK
                     if s['fields']['aggregatetimeestimate'] != s['fields']['timeestimate']:
@@ -321,7 +321,7 @@ def format_data(stories, subtasks):
                               newSubtask['key'], "not set to team")
 
                     print('DateCreated:', dateutil.parser.parse(issue['fields']['created']))
-                    print('Sprints:', [[i['id'], str(i['startDate']), str(i['endDate'])] for i in newSubtask['sprints']])
+                    print('In Sprints:', [i['id'] for i in newSubtask['sprints']])
 
                     newSubtask["completed_in_sprint"] = issue_completed_in_sprint_number(newSubtask['resolutiondate'], newSubtask['sprints'])
 
@@ -361,7 +361,8 @@ def format_data(stories, subtasks):
 
 
         storiesFormated.append(newStory)
-        print(newStory['key'], "STORY ROOT CAUSE:", json.dumps(newStory['subtask_rootcauses'], indent = 4))
+        
+        if DEBUG['defects']: print(newStory['key'], "Story Rootcauses:", json.dumps(newStory['subtask_rootcauses'], indent = 4))
 
 
     supportIssues['timespent_rendered'] = format_time(supportIssues['timespent'])
@@ -709,16 +710,17 @@ def get_issue_burndown(issue, this_sprint):
     else:
         devteam = "" 
 
-    print()
-    print("Issue key:", issue['key'])
-    print("Devteam:", issue['devteam']) if 'devteam' in issue else print("Devteam: n/a")
-    print("Issue created:", issue['created'])
-    print('Issue', 'OE:', issue['timeoriginalestimate'], 'TE:', issue['timeestimate'], 'TS:', issue['timespent'])
+    if DEBUG['burndown']: 
+        print()
+        print("Issue key:", issue['key'])
+        print("Devteam:", issue['devteam']) if 'devteam' in issue else print("Devteam: n/a")
+        print("Issue created:", issue['created'])
+        print('Issue', 'OE:', issue['timeoriginalestimate'], 'TE:', issue['timeestimate'], 'TS:', issue['timespent'])
 
-    # print issue changelog
-    print("-- changelog --")
-    for change in issue['changelog']:
-        print(str(change['created']).ljust(32), change['field'].ljust(20), str(change['from']).rjust(6), '->', str(change['to']).ljust(6))
+        # print issue changelog
+        print("-- changelog --")
+        for change in issue['changelog']:
+            print(str(change['created']).ljust(32), change['field'].ljust(20), str(change['from']).rjust(6), '->', str(change['to']).ljust(6))
     
     # get list of burndown items [date, int], each item is the change in value of the field at the change instance
     issue_burndown = collect_changes_and_dates(issue['changelog'], issue['created'], 'timeestimate', issue['timeoriginalestimate'])
@@ -742,7 +744,7 @@ def collect_changes_and_dates(changelog, issue_created, field, subtask_originale
     issue_burndown = []
     first = True
 
-    print('--', 'Filtered changelog items', '--')
+    if DEBUG['burndown']: print('--', 'Filtered changelog items', '--')
 
     for change in changelog:
         
@@ -751,15 +753,15 @@ def collect_changes_and_dates(changelog, issue_created, field, subtask_originale
             if first:
                 if change['from'] is not None:
                     issue_burndown.append([issue_created, int(change['from'])])
-                    print(str(issue_created).ljust(32), str(change['from']).rjust(25))
+                    if DEBUG['burndown']: print(str(issue_created).ljust(32), str(change['from']).rjust(25))
                 first = False
 
             issue_burndown.append([change['created'], calc_dif(change['to'], change['from'])])
-            print(str(change['created']).ljust(32), str(change['from']).rjust(6), '->', str(change['to']).ljust(6), '=', str(calc_dif(change['to'], change['from'])).rjust(6))
+            if DEBUG['burndown']: print(str(change['created']).ljust(32), str(change['from']).rjust(6), '->', str(change['to']).ljust(6), '=', str(calc_dif(change['to'], change['from'])).rjust(6))
 
     if len(issue_burndown) == 0 and subtask_originalestimate is not None:
         issue_burndown.append([issue_created, subtask_originalestimate])
-        print(str(issue_created).ljust(32), subtask_originalestimate)
+        if DEBUG['burndown']: print(str(issue_created).ljust(32), subtask_originalestimate)
 
     if DEBUG['burndown']:
         print('--', 'Items in issue burndown', '--')
@@ -884,11 +886,12 @@ def get_defects(stories):
         'timespent_rendered': format_time(sum([defects_total_count[x]['timespent'] for x in defects_total_count])),
     }
 
-    print("----- DEFECTS -----")
-    print(json.dumps(defects_total_count, indent = 4))
+    if DEBUG['defects']:
+        print("----- DEFECTS -----")
+        print(json.dumps(defects_total_count, indent = 4))
 
-    print("----- STORY DEFECT -----")
-    print(json.dumps(stories_with_defects, indent = 4))
+        print("----- STORY DEFECT -----")
+        print(json.dumps(stories_with_defects, indent = 4))
     
 
     return {'stories_with_defects': stories_with_defects, 'defects_total_count': defects_total_count}
@@ -985,7 +988,7 @@ def summarise_sprint(stories):
     sprint_summary['accuracy']['under_estimates']['TSvsOE_rendered'] = format_time(sprint_summary['accuracy']['under_estimates']['TSvsOE'])
 
 
-    print(json.dumps(sprint_summary, indent = 4))
+    if DEBUG['sprint_summary']: print("Sprint Summary:", json.dumps(sprint_summary, indent = 4))
 
     return sprint_summary
 
@@ -999,8 +1002,10 @@ def start(sprint):
 
     global DEBUG
     DEBUG = {
-        'changelog': True,
-        'burndown': True,
+        'changelog': False,
+        'burndown': False,
+        'defects': False,
+        'sprint_summary': False,
     }
 
     OFFLINE_MODE = True
@@ -1037,7 +1042,8 @@ def start(sprint):
 
     data = format_data(stories, subtasks)
 
-    print(SPRINT_LOG)
+
+    if DEBUG['changelog']: print('SPRINT_LOG:', json.dumps(SPRINT_LOG, indent = 4))
 
     return (data, all_sprints)
 

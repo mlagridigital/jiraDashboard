@@ -47,6 +47,10 @@ table {
 
 }
 
+.table-responsive {
+	display: table;
+}
+
 td, th {
 	/*white-space: pre;*/
 
@@ -69,7 +73,7 @@ td, th {
 	vertical-align: middle;
 }
 
-th, th {
+th {
 	font-weight: 900;
 	background-color: rgba(235, 237, 240, 0.8)
 }
@@ -140,10 +144,13 @@ th.cell_time, td.cell_time {
 	text-align: right;
 }
 
+th.cell_progress {
+	text-align: center;
+}
 
 td.cell_progress_percentage {
 	vertical-align: middle;
-	text-align: : right;
+	text-align: right;
 	min-width: 45px;
 	max-width: 70px;
 }
@@ -156,6 +163,8 @@ td.cell_progress {
 
 
 
+
+
 /*@media only screen and (min-width: 1920px) {
 	.progress {
 		min-width: 150px;
@@ -163,7 +172,7 @@ td.cell_progress {
 }*/
 
 
-.traffic_light {
+/*.traffic_light {
   height: 20px;
   width: 20px;
   border-radius: 50%;
@@ -196,7 +205,7 @@ td.cell_progress {
 .traffic_light_inProgress {
 	background-color: #cccccc;
 	border-color: #8c8c8c;
-}
+}*/
 
 .alert {
     margin-bottom: 0;
@@ -256,29 +265,34 @@ tr.defectTable_row {
 	background-color: rgba(235, 237, 240, 0.4);
 }
 
-th.defectTable_col_storyKey{
-	min-width: 80px;
-	width: 80px;
-}
-
-th.defectTable_col_defectType {
-	min-width: 100px;
+th.defectTable_cell_storyKey{
+	/*min-width: 80px;*/
 	width: 100px;
 }
 
-th.defectTable_col_total{
-	min-width: 60px;
-	width: 60px;
-}
-
-th.defectTable_col_timespent {
+td.defectTable_cell_defectType, th.defectTable_cell_defectType {
 	min-width: 100px;
-	width: 100px;
+	/*width: 100px;*/
+	text-align: right;
 }
 
-th.defectTable_col_average {
+td.defectTable_cell_total, th.defectTable_cell_total {
 	min-width: 60px;
-	width: 60px;
+	/*width: 60px;*/
+	text-align: right;
+
+}
+
+td.defectTable_cell_timespent, th.defectTable_cell_timespent {
+	min-width: 100px;
+	/*width: 100px;*/
+	text-align: right;
+}
+
+td.defectTable_cell_average, th.defectTable_cell_average {
+	min-width: 60px;
+	/*width: 60px;*/
+	text-align: right;
 }
 
 

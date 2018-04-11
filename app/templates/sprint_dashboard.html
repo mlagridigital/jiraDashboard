@@ -15,7 +15,7 @@
 
 <div class="container-fluid">
 
-	<!--   TABLE    -->
+	<!--   STORY TABLE    -->
 	<div class="card">
 
 		<div class="card-header">
@@ -31,7 +31,7 @@
 		</div>
 
 		<div class="card-body" style="padding: 0px 0px 0px 0px;">
-			<table class="table table-condensed" style="overflow-x: scroll; margin-bottom: 0px">
+			<table class="table table-responsive" style="margin-bottom: 0px">
 				
 				<thead id="table_stories_header">
 					<tr>
@@ -44,7 +44,7 @@
 						<th class="cell_time">Original Estimate</th>
 						<th class="cell_time">Time Spent</th>
 						<th class="cell_time">Remaining Time</th>
-						<th colspan="2">Progress</th>
+						<th class="cell_progress" colspan="2">Progress</th>
 						<th class="cell_TSvsOE" colspan="2">TS vs OE</th>
 						<!-- <th class="cell_TSvsOE"></th> -->
 						<th>To Do </th>
@@ -63,7 +63,7 @@
 							<td class="cell_key"><a href="{{ issue.self }}">{{ issue.key }}</a></td>
 							<td class="cell_issuetype"><img src="{{ issue.issuetypeIcon }}" height="15" width="15"> {{ issue.issuetype }}</td>
 							<td class="cell_summary">{{ issue.summary }}</td>
-							<td class="cell_subtasks" style="text-align: center;">{{ issue.subtasks|length }}</td>
+							<td class="cell_subtasks" style="text-align: center;">{% if issue.subtasks|length > 0 %}+ {{ issue.subtasks|length }}{% endif %}</td>
 							<td class="cell_status">{{ issue.status }}</td>
 							<td class="cell_assignee">{{ issue.assignee }}</td>
 							<td class="cell_time" actual="{{ issue.aggregatetimeoriginalestimate }}">{% if issue.aggregatetimeoriginalestimate != None %}{{ issue.aggregatetimeoriginalestimate_str }}{% endif %}</td>
@@ -191,17 +191,17 @@
 		<div class="card-body" style="padding: 0px 0px 0px 0px;">
 			<div class="row">
 				<div class="col-sm-8" style="overflow-x: scroll;">
-					<table class="table table-condensed" style="margin-bottom: 0px;">
+					<table class="table table-responsive" style="margin-bottom: 0px;">
 					<thead>
 						<tr>
-							<th class="defectTable_col_storyKey">Story Key</th>
+							<th class="defectTable_cell_storyKey">Story Key</th>
 							
 							{% for key in defects['defects_total_count'] if key != 'Total' %}
-								<th class="defectTable_col_defectType">{{ key }}</th>
+								<th class="defectTable_cell_defectType">{{ key }}</th>
 							{% endfor %}
-							<th class="defectTable_col_total">Total</th>
-							<th class="defectTable_col_timespent">Time Spent</th>
-							<th class="defectTable_col_average">Average</th>
+							<th class="defectTable_cell_total">Total</th>
+							<th class="defectTable_cell_timespent">Time Spent</th>
+							<th class="defectTable_cell_average">Average</th>
 						</tr>
 					</thead>
 
@@ -211,11 +211,11 @@
 								<td><img src="{{ story.issuetypeIcon }}" height="15" width="15"><a href="{{ story['self'] }}"> {{ story['key'] }}</a></td>
 								
 								{% for key in defects['defects_total_count'] if key != 'Total' %}
-									<td>{% if key in story['subtask_rootcauses'] %}{{ story['subtask_rootcauses'][key]['count'] }}{% else %}{% endif %}</td>
+									<td class="defectTable_cell_defectType">{% if key in story['subtask_rootcauses'] %}{{ story['subtask_rootcauses'][key]['count'] }}{% else %}{% endif %}</td>
 								{% endfor %}
-								<td>{{ story['total_count'] }}</td>
-								<td>{{ story['timespent_on_defects_rendered'] }}</td>
-								<td>{{ (story['timespent_on_defects'] / (60 * 60 * story['total_count'])) | round(1, 'common') }}h</td>
+								<td class="defectTable_cell_total">{{ story['total_count'] }}</td>
+								<td class="defectTable_cell_timespent">{{ story['timespent_on_defects_rendered'] }}</td>
+								<td class="defectTable_cell_average">{{ (story['timespent_on_defects'] / (60 * 60 * story['total_count'])) | round(1, 'common') }}h</td>
 							</tr>
 						{% endfor %}
 					</tbody>
@@ -225,10 +225,10 @@
 							<th>Total</th>
 							
 							{% for key, item in defects['defects_total_count'].items() if key != 'Total' %}
-								<th defect_type="{{ key }}">{{ item['count'] }}</th>
+								<th class="defectTable_cell_total" defect_type="{{ key }}">{{ item['count'] }}</th>
 							{% endfor %}
 				
-							<th defect_type="Total">{{ defects['defects_total_count']['Total']['count'] }}</th>
+							<th class="defectTable_cell_total" defect_type="Total">{{ defects['defects_total_count']['Total']['count'] }}</th>
 							<th></th>
 							<th></th>
 						</tr>
@@ -236,29 +236,29 @@
 							<th>Time Spent</th>
 							
 							{% for key, item in defects['defects_total_count'].items() if key != 'Total' %}
-								<th defect_type="{{ key }}" actual="{{ item['timespent'] }}">{{ item['timespent_rendered'] }}</th>
+								<th class="defectTable_cell_timespent" defect_type="{{ key }}" actual="{{ item['timespent'] }}">{{ item['timespent_rendered'] }}</th>
 							{% endfor %}
 							
 							<th></th>
-							<th defect_type="Total" actual="{{ defects['defects_total_count']['Total']['timespent'] }}">{{ defects['defects_total_count']['Total']['timespent_rendered'] }}</th>
+							<th class="defectTable_cell_timespent" defect_type="Total" actual="{{ defects['defects_total_count']['Total']['timespent'] }}">{{ defects['defects_total_count']['Total']['timespent_rendered'] }}</th>
 							<th></th>
 						</tr>
 						<tr>
 							<th>Average</th>
 							
 							{% for key, item in defects['defects_total_count'].items() if key != 'Total' %}
-								<th defect_type="{{ key }}">{{ (item['timespent'] / (60 * 60 * item['count']))|round(1, 'common') }}h</th>
+								<th class="defectTable_cell_average" defect_type="{{ key }}">{{ (item['timespent'] / (60 * 60 * item['count']))|round(1, 'common') }}h</th>
 							{% endfor %}
 							
 							<th></th>
 							<th></th>
-							<th defect_type="Total">{{ (defects['defects_total_count']['Total']['timespent'] / (60 * 60 * defects['defects_total_count']['Total']['count']))|round(1, 'common') }}h</th>
+							<th class="defectTable_cell_average" defect_type="Total">{{ (defects['defects_total_count']['Total']['timespent'] / (60 * 60 * defects['defects_total_count']['Total']['count']))|round(1, 'common') }}h</th>
 						</tr>
 					</tfoot>				
 					</table>
 				</div>
 				<div class="col-sm-4 chart_div">
-					<canvas id="defect_chart" class="" max-width="400" max-height="400"></canvas>
+					<canvas id="defect_chart" class="" height="250"></canvas>
 				</div>
 			</div>
 		</div>
@@ -282,6 +282,20 @@
 			<li class="list-group-item">Time Spent on Support<strong style="float: right;">{{ support.timespent_rendered }}</strong></li>
 		</ul>
 	</div>
+
+	<!-- OVERALL SPRINT -->
+
+<!-- 	<br>
+	<div class="card" style="width: 30rem;">
+		<div class="card-header">
+			Sprint Summary
+		</div>
+		<ul class="list-group list-group-flush">
+			<li class="list-group-item"><strong style="float: right;">{{ support.count }}</strong></li>
+			<li class="list-group-item">Time Spent on Support<strong style="float: right;">{{ support.timespent_rendered }}</strong></li>
+		</ul>
+	</div> -->
+
 
 
 </div>
@@ -528,7 +542,7 @@
     		height: 600,
       		width: 600,
       		legend: {
-      			position: 'right'
+      			position: 'top'
       		}
 
     	};
@@ -590,7 +604,7 @@
 
     		},
     		legend: {
-    			position: 'right',
+    			position: 'bottom',
     		},
     	},
 
