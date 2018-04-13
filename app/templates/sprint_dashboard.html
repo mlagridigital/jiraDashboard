@@ -153,40 +153,44 @@
 
 	<!--   BURNDOWNS    -->
 
-<!-- 
-	<br>
-
-	<div class="row">
-		<h3>Sprint Burndown</h3>
-	</div>
 
 	<br>
 
-	<div class="row justify-content-center">
-		<div class="col-xs-4 chart_div">
-			<div id="backend_burndown_chart" class=""></div>
+	<div class="card">
+		<div class="card-header">
+			<h5>Sprint Burndown</h5>
 		</div>
-		<div class="col-xs-4 chart_div">
-			<div id="frontend_burndown_chart" class=""></div>
-		</div>
-		<div class="col-xs-4 chart_div">
-			<div id="test_burndown_chart" class=""></div>
-		</div>
-	</div>
-	<div class="row">
-		<div class="col-xs-4 chart_div">
-			<div id="sprint_burndown_chart" class=""></div>
+		<br>
+		<div class="card-body" style="padding: 0px 0px 0px 0px;">
+			<div class="row justify-content-center">
+				<div class="col-xs-6 chart_div">
+					<div id="sprint_burndown_chart" class=""></div>
+				</div>
+				<div class="col-xs-6 chart_div">
+					<div id="test_burndown_chart" class=""></div>
+				</div>
+			</div>
+
+			<div class="row justify-content-center">
+				<div class="col-xs-6 chart_div">
+					<div id="backend_burndown_chart" class=""></div>
+				</div>
+				<div class="col-xs-6 chart_div">
+					<div id="frontend_burndown_chart" class=""></div>
+				</div>
+			</div>
+
 		</div>
 	</div>
 
- -->
+
 
 	<!--  DEFECTS -->
 	<br>
 
 	<div class="card">
 		<div class="card-header">
-			<h5>Defects</h5>
+			<h5>Defects by Story</h5>
 		</div>
 		<div class="card-body" style="padding: 0px 0px 0px 0px;">
 			<div class="row">
@@ -360,17 +364,17 @@
 <!-- CHARTS JAVASCRIPT -->
 <script type="text/javascript">
 
-    var ticks_list = [];
-	var millieconds_per_day = 1000*60*60*24;
-	var start_date = new Date('{{ stories[0]['sprints'][0]['startDate'] }}');
-	start_date.setMilliseconds(0);
-	start_date.setSeconds(0);
-	start_date.setMinutes(0);
-	start_date.setHours(0);
+ //    var ticks_list = [];
+	// var millieconds_per_day = 1000*60*60*24;
+	// var start_date = new Date('{{ stories[0]['sprints'][0]['startDate'] }}');
+	// start_date.setMilliseconds(0);
+	// start_date.setSeconds(0);
+	// start_date.setMinutes(0);
+	// start_date.setHours(0);
 
-	for(i = 1; i < 14; i++){
-		ticks_list.push(new Date(Date.parse(start_date) + i * millieconds_per_day))
-	};
+	// for(i = 1; i < 14; i++){
+	// 	ticks_list.push(new Date(Date.parse(start_date) + i * millieconds_per_day))
+	// };
 
 	google.charts.load('current', {'packages':['line', 'corechart']});
     google.charts.setOnLoadCallback(drawSprintBurndown);
@@ -401,8 +405,7 @@
       			max: new Date('{{ this_sprint['endDate'] }}'),
       		},
       		format: 'MMM d hh:mm',
-      		ticks: ticks_list,
-
+      		// ticks: ticks_list,
         },
         vAxis: {
 			title: 'Time Estimate [Hours]',
@@ -473,8 +476,7 @@
       			max: new Date('{{ this_sprint['endDate'] }}'),
       		},
       		format: 'MMM d hh:mm',
-      		ticks: ticks_list,
-
+      		// ticks: ticks_list,
         },
         vAxis: {
         	title: 'Time Estimate [Hours]',
@@ -512,8 +514,7 @@
       			max: new Date('{{ this_sprint['endDate'] }}'),
       		},
       		format: 'MMM d hh:mm',
-      		ticks: ticks_list,
-
+      		// ticks: ticks_list,
         },
         vAxis: {
 			title: 'Time Estimate [Hours]',
@@ -544,7 +545,6 @@
       		legend: {
       			position: 'top'
       		}
-
     	};
 
     	var chart = new google.visualization.PieChart(document.getElementById('defect_chart'));

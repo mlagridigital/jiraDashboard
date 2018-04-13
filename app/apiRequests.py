@@ -184,7 +184,7 @@ def format_data(stories, subtasks):
             supportIssues['count'] += 1
             if isinstance(issue['fields']['aggregatetimespent'], int):
                 supportIssues['timespent'] += issue['fields']['aggregatetimespent']
-            continue
+            # continue
 
         # WHAT TO DO WITH BUGS -- TREAT AS STORY OR SUPPORT
         # if issue['fields']['issuetype']['name'] == "Bug":
@@ -210,9 +210,9 @@ def format_data(stories, subtasks):
             "timeoriginalestimate": issue['fields']['timeoriginalestimate'],
             "timeestimate": issue['fields']['timeestimate'],
             
-            "aggregatetimespent": issue['fields']['aggregatetimespent'],
-            "aggregatetimeoriginalestimate": issue['fields']['aggregatetimeoriginalestimate'],
-            "aggregatetimeestimate": issue['fields']['aggregatetimeestimate'],
+            "aggregatetimespent": issue['fields']['aggregatetimespent'] if issue['fields']['aggregatetimespent'] else 0,
+            "aggregatetimeoriginalestimate": issue['fields']['aggregatetimeoriginalestimate'] if issue['fields']['aggregatetimeoriginalestimate'] else 0,
+            "aggregatetimeestimate": issue['fields']['aggregatetimeestimate'] if issue['fields']['aggregatetimeestimate'] else 0,
             "aggregatetimespent_str": format_time(issue['fields']['aggregatetimespent']),
             "aggregatetimeoriginalestimate_str": format_time(issue['fields']['aggregatetimeoriginalestimate']),
             "aggregatetimeestimate_str": format_time(issue['fields']['aggregatetimeestimate']),
@@ -386,12 +386,14 @@ def format_time(time):
     Given a time in seconds. Return a string "Ww Dd Hh Mm". Where W/D/H/M are the number of weeks, days, hours, minutes in time.
     """
 
-    if not isinstance(time, int):
-        print("Error [format_time] - time is not int, time is:", time)
-        return time
-
     if time == 0:
         return "0d"
+
+    if not isinstance(time, int):
+        print("Error [format_time] - time is not int, time is:", time)
+        return ""
+
+
 
     time = abs(time)
 
@@ -629,6 +631,20 @@ def issue_completed_in_sprint_number(resolutiondate, sprints):
         # resolutiondate
 
 
+# ------------------ TABLE SORT ------------------ #
+
+def sort_table(stories, sort_col, direction):
+
+    if direction == 'descending':
+        reverse = True
+    else:
+        reverse = False
+
+
+    stories.sort(key=lambda e: e[sort_col], reverse=reverse)
+
+    return stories
+
 # ------------------ BURNDOWN ------------------ #
 
 
@@ -835,6 +851,39 @@ def get_startdate(story, issue):
     pass
 
 
+def data_checking(stories, subtasks):
+
+    # all_issues = [subtask for story in stories for subtask in story['subtasks']]
+
+    all_issues = []
+    total = 0
+    count_issues = 0
+    issues_timeestimate_none = []
+
+    # for story in stories:
+    #     all_issues.append(story)
+    #     if story['subtasks']:
+    #         for subtask in story['subtasks']:
+    #             all_issues.append(subtask)
+
+
+    all_issues.extend(stories)
+    all_issues.extend(subtasks)
+
+    filtered_issues = [[item['key'], item['fields']['timeestimate'], format_time(item['fields']['timeestimate'])] for item in all_issues]
+
+    for issue in all_issues:
+        try:
+            total += issue['fields']['timeestimate']
+            count_issues += 1
+        except:
+            total += 0
+            issues_timeestimate_none.append(issue['key'])
+            count_issues += 1
+
+    total = total / (60 * 60)
+
+    return filtered_issues, total, count_issues, issues_timeestimate_none
 
 # ------------------ RETRO ------------------ #
 
@@ -937,6 +986,7 @@ def summarise_sprint(stories):
             'Defect': 0,
             'Sub-task': 0,
             'Testing task': 0,
+            'Support ': 0,
         },
     }
 
@@ -993,6 +1043,20 @@ def summarise_sprint(stories):
     return sprint_summary
 
 
+def timespent_per_developer(stories):
+
+    data = [item for story in stories for item in story['changelog'] if item['field'] == 'timespent']
+
+
+    # for story in stories:
+    #     for item in story['changelog']:
+    #         if item['field'] == 'timespent':
+    #             data.extend([item])
+    
+    # timespent_changes = [d for d in data if d['']]
+
+    return data
+
 # ------------------ SETUP ------------------ #
 
 def start(sprint):
@@ -1008,7 +1072,7 @@ def start(sprint):
         'sprint_summary': False,
     }
 
-    OFFLINE_MODE = True
+    OFFLINE_MODE = False
 
     if OFFLINE_MODE:
         with open('stories.pkl', 'rb') as f:
@@ -1041,11 +1105,11 @@ def start(sprint):
             pickle.dump(all_sprints, f)
 
     data = format_data(stories, subtasks)
-
+    data_check = data_checking(stories, subtasks)
 
     if DEBUG['changelog']: print('SPRINT_LOG:', json.dumps(SPRINT_LOG, indent = 4))
 
-    return (data, all_sprints)
+    return (data, all_sprints, data_check)
 
 
 if __name__ == "__main__":

@@ -4,7 +4,6 @@ import requests, json
 from . import apiRequests
 
 
-
 @app.route('/')
 def index():
 
@@ -17,7 +16,7 @@ def sprint_dashboard(sprint_id):
 	# all_sprints = apiRequests.get_all_sprints()
 	# this_sprint = apiRequests.get_sprint(sprint_id, all_sprints)
 
-	data, all_sprints = apiRequests.start(sprint_id)
+	data, all_sprints, data_check = apiRequests.start(sprint_id)
 
 	this_sprint = apiRequests.get_sprint(sprint_id, all_sprints)
 	burndown_data = apiRequests.get_burndown(data['stories'], this_sprint)
@@ -41,6 +40,10 @@ def sprint_dashboard(sprint_id):
 
 	sprint_summary = apiRequests.summarise_sprint(data['stories'])
 
+	stories = data['stories']
+
+	stories = apiRequests.sort_table(stories, 'key', 'ascending')
+
 	# frontend_burndown = backend_burndown
 	# test_burndown = backend_burndown
 	# frontend_burndown = apiRequests.get_burndown(data['stories'], 'Front End', this_sprint)
@@ -49,7 +52,7 @@ def sprint_dashboard(sprint_id):
 	defects = apiRequests.get_defects(data['stories'])
 
 	return render_template('sprint_dashboard.html',
-		stories = (data['stories']),
+		stories = stories,
 		sprint_burndown = sprint_burndown,
 		backend_burndown = backend_burndown,
 		frontend_burndown = frontend_burndown,
@@ -66,7 +69,7 @@ def json_data(sprint_id):
 	# all_sprints = apiRequests.get_all_sprints()
 	# this_sprint = apiRequests.get_sprint(sprint_id, all_sprints)
 
-	data, all_sprints = apiRequests.start(sprint_id)
+	data, all_sprints, data_check = apiRequests.start(sprint_id)
 
 	this_sprint = apiRequests.get_sprint(sprint_id, all_sprints)
 	burndown_data = apiRequests.get_burndown(data['stories'], this_sprint)
@@ -97,19 +100,20 @@ def json_data(sprint_id):
 
 	defects = apiRequests.get_defects(data['stories'])
 
-	return jsonify(
-		stories = (data['stories']),
-		sprint_burndown = sprint_burndown,
-		backend_burndown = backend_burndown,
-		frontend_burndown = frontend_burndown,
-		test_burndown = test_burndown,
-		defects = defects,
-		all_sprints = all_sprints,
-		this_sprint = this_sprint,
-		sprint_summary = sprint_summary,
-		support = (data['support']),
-		)
+	# return jsonify(
+	# 	stories = (data['stories']),
+	# 	sprint_burndown = sprint_burndown,
+	# 	backend_burndown = backend_burndown,
+	# 	frontend_burndown = frontend_burndown,
+	# 	test_burndown = test_burndown,
+	# 	defects = defects,
+	# 	all_sprints = all_sprints,
+	# 	this_sprint = this_sprint,
+	# 	sprint_summary = sprint_summary,
+	# 	support = (data['support']),
+	# 	)
 
+	return jsonify (data = data['stories'])
 
 
 #--------------------- TEST ---------------------#
