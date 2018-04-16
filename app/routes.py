@@ -16,7 +16,7 @@ def index():
 	return render_template('index.html', all_sprints = all_sprints)
 
 @app.route('/sprint/<int:sprint_id>')
-def sprint_dashboard(sprint_id, sort_field="key", sort_direction="ascending"):
+def sprint_dashboard(sprint_id, sort_field="issuetype", sort_direction="ascending"):
 
 	# all_sprints = apiRequests.get_all_sprints()
 	# this_sprint = apiRequests.get_sprint(sprint_id, all_sprints)

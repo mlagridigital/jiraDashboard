@@ -1181,7 +1181,7 @@ def summarise_sprint(stories):
                 'timespent_rendered': "",
                 'timespent_in_this_sprint_rendered': "",
                 'timeestimate_rendered': "",
-                'iconUrl': "https://fullprofile.atlassian.net/secure/viewavatar?size=xsmall&avatarId=10316&avatarType=issuetype",
+                'iconUrl': "",
             },
         },
         'sprints_carried_over': []

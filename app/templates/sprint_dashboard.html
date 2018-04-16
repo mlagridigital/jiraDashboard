@@ -238,7 +238,7 @@
 
 	<div class="card">
 		<div class="card-header">
-			<h5>Sprint Burndown</h5>
+			Sprint Burndown
 		</div>
 		<br>
 		<div class="card-body" style="padding: 0px 0px 0px 0px;">
@@ -266,103 +266,107 @@
 
 
 	<!--  DEFECTS -->
-
-	<div class="card">
-		<div class="card-header">
-			<h5>Defects by Story</h5>
-		</div>
-		<div class="card-body" style="padding: 0px 0px 0px 0px;">
-			<div class="row">
-				<div class="col-sm-8" style="overflow-x: scroll;">
+	<div class="card-columns">
+		<div class="card in_columns" style="width: 75rem;">
+			<div class="card-header">
+				Defects by Story
+			</div>
+			<div class="card-body" style="padding: 0px 0px 0px 0px;">
+				<div style="overflow-x: scroll;">
 					<table class="table table-responsive" style="margin-bottom: 0px;">
-					<thead>
-						<tr>
-							<th class="defectTable_cell_storyKey">Story Key</th>
-							
-							{% for key in defects['defects_total_count'] if key != 'Total' %}
-								<th class="defectTable_cell_defectType">{{ key }}</th>
-							{% endfor %}
-							<th class="defectTable_cell_total">Total</th>
-							<th class="defectTable_cell_timespent">Time Spent</th>
-							<th class="defectTable_cell_timespent">Time Spent this Sprint</th>
-							<th class="defectTable_cell_average">Average</th>
-						</tr>
-					</thead>
-
-					<tbody>
-						{% for story in defects['stories_with_defects'] %}
-							<tr class="defectTable_row">
-								<td><img src="{{ story.issuetypeIcon }}" height="15" width="15"><a href="{{ story['self'] }}"> {{ story['key'] }}</a></td>
+						<thead>
+							<tr>
+								<th class="defectTable_cell_storyKey">Story Key</th>
 								
 								{% for key in defects['defects_total_count'] if key != 'Total' %}
-									<td class="defectTable_cell_defectType">{% if key in story['subtask_rootcauses'] %}{{ story['subtask_rootcauses'][key]['count'] }}{% else %}{% endif %}</td>
+									<th class="defectTable_cell_defectType">{{ key }}</th>
 								{% endfor %}
-								<td class="defectTable_cell_total">{{ story['total_count'] }}</td>
-								<td class="defectTable_cell_timespent">{{ story['timespent_on_defects_rendered'] }}</td>
-								<td class="defectTable_cell_timespent">{{ story['timespent_in_this_sprint_on_defects_rendered'] }}</td>
-								<td class="defectTable_cell_average">{{ (story['timespent_on_defects'] / (60 * 60 * story['total_count'])) | round(1, 'common') }}h</td>
+								<th class="defectTable_cell_total">Total</th>
+								<th class="defectTable_cell_timespent">Time Spent</th>
+								<th class="defectTable_cell_timespent">Time Spent this Sprint</th>
+								<th class="defectTable_cell_average">Average time</th>
 							</tr>
-						{% endfor %}
-					</tbody>
+						</thead>
 
-					<tfoot>
-						<tr>
-							<th>Total</th>
-							
-							{% for key, item in defects['defects_total_count'].items() if key != 'Total' %}
-								<th class="defectTable_cell_total" defect_type="{{ key }}">{{ item['count'] }}</th>
+						<tbody>
+							{% for story in defects['stories_with_defects'] %}
+								<tr class="defectTable_row">
+									<td><img src="{{ story.issuetypeIcon }}" height="15" width="15"><a href="{{ story['self'] }}"> {{ story['key'] }}</a></td>
+									
+									{% for key in defects['defects_total_count'] if key != 'Total' %}
+										<td class="defectTable_cell_defectType">{% if key in story['subtask_rootcauses'] %}{{ story['subtask_rootcauses'][key]['count'] }}{% else %}{% endif %}</td>
+									{% endfor %}
+									<td class="defectTable_cell_total">{{ story['total_count'] }}</td>
+									<td class="defectTable_cell_timespent">{{ story['timespent_on_defects_rendered'] }}</td>
+									<td class="defectTable_cell_timespent">{{ story['timespent_in_this_sprint_on_defects_rendered'] }}</td>
+									<td class="defectTable_cell_average">{{ (story['timespent_on_defects'] / (60 * 60 * story['total_count'])) | round(1, 'common') }}h</td>
+								</tr>
 							{% endfor %}
-							<th class="defectTable_cell_total" defect_type="Total">{{ defects['defects_total_count']['Total']['count'] }}</th>
-							<th></th>
-							<th></th>
-							<th></th>
-						</tr>
-						<tr>
-							<th>Time Spent</th>
-							
-							{% for key, item in defects['defects_total_count'].items() if key != 'Total' %}
-								<th class="defectTable_cell_timespent" defect_type="{{ key }}" actual="{{ item['timespent'] }}">{{ item['timespent_rendered'] }}</th>
-							{% endfor %}
-							
-							<th></th>
-							<th class="defectTable_cell_timespent" defect_type="Total" actual="{{ defects['defects_total_count']['Total']['timespent'] }}">{{ defects['defects_total_count']['Total']['timespent_rendered'] }}</th>
-							<th></th>
-							<th></th>
-						</tr>
-						<tr>
-							<th>Time Spent this Sprint</th>
-							
-							{% for key, item in defects['defects_total_count'].items() if key != 'Total' %}
-								<th class="defectTable_cell_timespent" defect_type="{{ key }}" actual="{{ item['timespent_in_this_sprint'] }}">{{ item['timespent_in_this_sprint_rendered'] }}</th>
-							{% endfor %}
-							
-							<th></th>
-							<th></th>
-							<th class="defectTable_cell_timespent" defect_type="Total" actual="{{ defects['defects_total_count']['Total']['timespent_in_this_sprint'] }}">{{ defects['defects_total_count']['Total']['timespent_in_this_sprint_rendered'] }}</th>
-							<th></th>
-						</tr>
-						<tr>
-							<th>Average</th>
-							
-							{% for key, item in defects['defects_total_count'].items() if key != 'Total' %}
-								<th class="defectTable_cell_average" defect_type="{{ key }}">{{ (item['timespent'] / (60 * 60 * item['count']))|round(1, 'common') }}h</th>
-							{% endfor %}
-							
-							<th></th>
-							<th></th>
-							<th></th>
-							<th class="defectTable_cell_average" defect_type="Total">{{ (defects['defects_total_count']['Total']['timespent'] / (60 * 60 * defects['defects_total_count']['Total']['count']))|round(1, 'common') }}h</th>
-						</tr>
-					</tfoot>				
+						</tbody>
+
+						<tfoot>
+							<tr>
+								<th>Total</th>
+								
+								{% for key, item in defects['defects_total_count'].items() if key != 'Total' %}
+									<th class="defectTable_cell_total" defect_type="{{ key }}">{{ item['count'] }}</th>
+								{% endfor %}
+								<th class="defectTable_cell_total" defect_type="Total">{{ defects['defects_total_count']['Total']['count'] }}</th>
+								<th></th>
+								<th></th>
+								<th></th>
+							</tr>
+							<tr>
+								<th>Time Spent</th>
+								
+								{% for key, item in defects['defects_total_count'].items() if key != 'Total' %}
+									<th class="defectTable_cell_timespent" defect_type="{{ key }}" actual="{{ item['timespent'] }}">{{ item['timespent_rendered'] }}</th>
+								{% endfor %}
+								
+								<th></th>
+								<th class="defectTable_cell_timespent" defect_type="Total" actual="{{ defects['defects_total_count']['Total']['timespent'] }}">{{ defects['defects_total_count']['Total']['timespent_rendered'] }}</th>
+								<th></th>
+								<th></th>
+							</tr>
+							<tr>
+								<th>Time Spent this Sprint</th>
+								
+								{% for key, item in defects['defects_total_count'].items() if key != 'Total' %}
+									<th class="defectTable_cell_timespent" defect_type="{{ key }}" actual="{{ item['timespent_in_this_sprint'] }}">{{ item['timespent_in_this_sprint_rendered'] }}</th>
+								{% endfor %}
+								
+								<th></th>
+								<th></th>
+								<th class="defectTable_cell_timespent" defect_type="Total" actual="{{ defects['defects_total_count']['Total']['timespent_in_this_sprint'] }}">{{ defects['defects_total_count']['Total']['timespent_in_this_sprint_rendered'] }}</th>
+								<th></th>
+							</tr>
+							<tr>
+								<th>Average time</th>
+								
+								{% for key, item in defects['defects_total_count'].items() if key != 'Total' %}
+									<th class="defectTable_cell_average" defect_type="{{ key }}">{{ (item['timespent'] / (60 * 60 * item['count']))|round(1, 'common') }}h</th>
+								{% endfor %}
+								
+								<th></th>
+								<th></th>
+								<th></th>
+								<th class="defectTable_cell_average" defect_type="Total">{{ (defects['defects_total_count']['Total']['timespent'] / (60 * 60 * defects['defects_total_count']['Total']['count']))|round(1, 'common') }}h</th>
+							</tr>
+						</tfoot>				
 					</table>
-				</div>
-				<div class="col-sm-4 chart_div">
-					<canvas id="defect_chart" class="" height="250"></canvas>
 				</div>
 			</div>
 		</div>
-	</div>
 
+		<div class="card in_columns" style="width:40rem;">
+			<div class="card-header">
+				Total timespent on each defect rootcause [Hours]
+			</div>
+			<div class="chart_div">
+				<canvas id="defect_chart" class="" height="250"></canvas>
+			</div>
+		</div>
+	</div>
 
 
 </div>
@@ -593,27 +597,26 @@
       chart.draw(data, google.charts.Line.convertOptions(options));
     }
 
-    function drawDefectPi(){
+    // function drawDefectPi(){
 
-    	var data = google.visualization.arrayToDataTable(
-    	[
-    		['Defect Type', 'Time Spent',],
-    		{% for d in defects['defects_total_count'] if d != 'Total' %}['{{ d }}', {{ (defects['defects_total_count'][d]['timespent'] / (60 * 60)) | round(1, 'common') }}],{% endfor %}
-    	]);
+    // 	var data = google.visualization.arrayToDataTable(
+    // 	[
+    // 		['Defect Type', 'Time Spent',],
+    // 		{% for d in defects['defects_total_count'] if d != 'Total' %}['{{ d }}', {{ (defects['defects_total_count'][d]['timespent'] / (60 * 60)) | round(1, 'common') }}],{% endfor %}
+    // 	]);
 
-    	var options = {
-    		title: '',
-    		height: 500,
-      		width: 500,
-      		legend: {
-      			position: 'top'
-      		}
-    	};
+    // 	var options = {
+    // 		title: '',
+    // 		height: 500,
+    //   		width: 500,
+    //   		legend: {
+    //   			position: 'top'
+    //   		}
+    // 	};
 
-    	var chart = new google.visualization.PieChart(document.getElementById('defect_chart'));
-    	chart.draw(data, options);
-    }
-
+    // 	var chart = new google.visualization.PieChart(document.getElementById('defect_chart'));
+    // 	chart.draw(data, options);
+    // }
 
 	var ctx = document.getElementById("defect_chart");
 
@@ -660,7 +663,7 @@
     		],
     		title: {
     			display: true,
-    			text: 'Total timespent on each defect rootcause in sprint [Hours]',
+    			// text: 'Total timespent on each defect rootcause in sprint [Hours]',
     			fontFamily: 'Avenir-Roman',
     			fontSize: 16,
     			fontColor: '#454a54',
@@ -670,8 +673,7 @@
     			position: 'bottom',
     		},
     	},
-
-	})
+	});
 
 </script>
 
