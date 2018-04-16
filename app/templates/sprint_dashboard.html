@@ -15,6 +15,89 @@
 
 <div class="container-fluid">
 
+
+	<div class="card-columns">
+		<!-- SUPPORT TASKS -->
+<!-- 
+		<div class="card in_columns" style="width: 22rem;">
+			<div class="card-header">
+				<img src="{{ support.iconUrl }}" height="25" width="25" style="vertical-align: middle"> Support Tasks
+			</div>
+			<ul class="list-group list-group-flush">
+				<li class="list-group-item">Number of Support Tasks<strong style="float: right;">{{ support.count }}</strong></li>
+				<li class="list-group-item">Time Spent on Support<strong style="float: right;">{{ support.timespent_rendered }}</strong></li>
+			</ul>
+		</div>
+ -->
+
+		<!-- SPRINT STATUS-->
+
+		<div class="card in_columns" style="width: 22rem;">
+			<div class="card-header">
+				{{ this_sprint.name }}
+			</div>
+			<ul class="list-group list-group-flush">
+				<li class="list-group-item">Status<strong style="float: right;">{{ this_sprint.state }}</strong></li>
+				<li class="list-group-item">Week Days Remaining<strong style="float: right;">{{ this_sprint.weekdays_remaining }}</strong></li>
+				<li class="list-group-item">Start Date<strong style="float: right;">{{ this_sprint.startDate_rendered }}</strong></li>
+				<li class="list-group-item">End Date<strong style="float: right;">{{ this_sprint.endDate_rendered }}</strong></li>
+				<li class="list-group-item">Sprint Id<strong style="float: right;">{{ this_sprint.id }}</strong></li>
+			</ul>
+		</div>
+
+
+		<!-- SPRINT SUMMARY -->
+
+		<div class="card in_columns" style="width: 50rem;">
+			<div class="card-header">
+				Sprint per Issuetype
+			</div>
+
+			<div class="card-body" style="padding: 0px 0px 0px 0px;">
+				<table class="table table-responsive issuetypeTable" style="margin-bottom: 0px">
+					<thead>
+						<tr>
+							<th class="issuetypeTable_issuetype">Issuetype</th>
+							<th class="issuetypeTable_count">Count</th>
+							<th class="issuetypeTable_time">Original Estimate</th>
+							<th class="issuetypeTable_time">Timespent</th>
+							<th class="issuetypeTable_time">Timespent this Sprint</th>
+							<th class="issuetypeTable_time">Time Estimate</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for issuetype in sprint_summary.issuetype %}
+							<tr>
+								<td class="issuetypeTable_issuetype"><img src="{{ sprint_summary.issuetype[issuetype].iconUrl }}" height="16" width="16" style="vertical-align: middle">  {{ issuetype }}</td>
+								<td class="issuetypeTable_count">{{ sprint_summary.issuetype[issuetype].count }}</td>
+								<td class="issuetypeTable_time">{{ sprint_summary.issuetype[issuetype].timeoriginalestimate_rendered }}</td>
+								<td class="issuetypeTable_time">{{ sprint_summary.issuetype[issuetype].timespent_rendered }}</td>
+								<td class="issuetypeTable_time">{{ sprint_summary.issuetype[issuetype].timespent_in_this_sprint_rendered }}</td>
+								<td class="issuetypeTable_time">{{ sprint_summary.issuetype[issuetype].timeestimate_rendered }}</td>
+
+							</tr>
+						{% endfor %}
+					</tbody>
+
+					<tfoot>
+						<tr>
+							<th class="issuetypeTable_issuetype"></th>
+							<th class="issuetypeTable_count">{{ sprint_summary.story_count + sprint_summary.subtask_count }}</th>
+							<th class="issuetypeTable_time">{{ sprint_summary.aggregatetimeoriginalestimate_rendered }}</th>
+							<th class="issuetypeTable_time">{{ sprint_summary.aggregatetimespent_rendered }}</th>
+							<th class="issuetypeTable_time">{{ sprint_summary.aggregatetimespent_in_this_sprint_rendered }}</th>
+							<th class="issuetypeTable_time">{{ sprint_summary.aggregatetimeestimate_rendered }}</th>
+						</tr>
+					</tfoot>
+				</table>
+			</div>
+		</div>
+
+
+
+	</div>
+
+
 	<!--   STORY TABLE    -->
 	<div class="card">
 
@@ -43,6 +126,7 @@
 						<th>Assignee      </th>
 						<th class="cell_time">Original Estimate</th>
 						<th class="cell_time">Time Spent</th>
+						<th class="cell_time">Time Spent this Sprint</th>
 						<th class="cell_time">Remaining Time</th>
 						<th class="cell_progress" colspan="2">Progress</th>
 						<th class="cell_TSvsOE" colspan="2">TS vs OE</th>
@@ -68,6 +152,7 @@
 							<td class="cell_assignee">{{ issue.assignee }}</td>
 							<td class="cell_time" actual="{{ issue.aggregatetimeoriginalestimate }}">{% if issue.aggregatetimeoriginalestimate != None %}{{ issue.aggregatetimeoriginalestimate_str }}{% endif %}</td>
 							<td class="cell_time" actual="{{ issue.aggregatetimespent }}">{% if issue.aggregatetimespent != None %}{{ issue.aggregatetimespent_str }}{% endif %}</td>
+							<td class="cell_time" actual="{{ issue.aggregatetimespent_in_this_sprint }}">{% if issue.aggregatetimespent_in_this_sprint != None %}{{ issue.aggregatetimespent_in_this_sprint_rendered }}{% endif %}</td>
 							<td class="cell_time" actual="{{ issue.aggregatetimeestimate }}">{% if issue.aggregatetimeestimate != None %}{{ issue.aggregatetimeestimate_str }}{% endif %}</td>
 							<td class="cell_progress_percentage">{% if issue.progress != None %}{{ issue.progress }}%{% endif %}</td>
 							<td class="cell_progress"><div class="progress" style="height: 10px; width: 100%"><div class="progress-bar" style="height: 10px; width: {{ issue.progress }}%"></div></div></td>
@@ -97,6 +182,7 @@
 										<td>{{ subtask.assignee }}</td>
 										<td class="cell_time" actual="{{ subtask.timeoriginalestimate }}">{% if subtask.timeoriginalestimate != None %}{{ subtask.timeoriginalestimate_rendered }}{% endif %}</td>
 										<td class="cell_time" actual="{{ subtask.timespent }}">{% if subtask.timespent != None %}{{ subtask.timespent_rendered }}{% endif %}</td>
+										<td class="cell_time" actual="{{ subtask.timespent_in_this_sprint }}">{% if subtask.timespent_in_this_sprint != None %}{{ subtask.timespent_in_this_sprint_rendered }}{% endif %}</td>
 										<td class="cell_time" actual="{{ subtask.timeestimate }}">{% if subtask.timeestimate != None %}{{ subtask.timeestimate_rendered }}{% endif %}</td>
 										<td class="cell_progress_percentage">{% if subtask.progress != None %}{{ subtask.progress }}%{% endif %}</td>
 										<td class="cell_progress"><div class="progress" style="height: 10px; width: 100%"><div class="progress-bar bg-warning" style="height: 10px; width: {{ subtask.progress }}%"></div></div></td>
@@ -130,7 +216,8 @@
 					<th></th>
 					<th class="cell_time">{{ sprint_summary['aggregatetimeoriginalestimate_rendered'] }}</th>
 					<th class="cell_time">{{ sprint_summary['aggregatetimespent_rendered'] }}</th>
-					<th class="cell_time">{{ sprint_summary['aggregatetimeestimate_rendered'] }}</th>
+					<th class="cell_time">{{ sprint_summary['aggregatetimespent_in_this_sprint_rendered'] }}</th>
+					<th class="cell_time">{{ sprint_summary['aggregatetimeestimate_rendered'] }}</th>		
 					<th class="cell_progress_percentage">{{ sprint_summary['progress'] }}%</th>
 					<th></th>
 					<th class="cell_TSvsOE" colspan="2" style="text-align: left;" >TS < OE: {{ sprint_summary['accuracy']['over_estimates']['TSvsOE_rendered'] }}<div>TS > OE: {{ sprint_summary['accuracy']['under_estimates']['TSvsOE_rendered'] }}</div></th>
@@ -146,15 +233,8 @@
 
 	</div>
 
-	
-	<br>
-
-		
 
 	<!--   BURNDOWNS    -->
-
-
-	<br>
 
 	<div class="card">
 		<div class="card-header">
@@ -186,7 +266,6 @@
 
 
 	<!--  DEFECTS -->
-	<br>
 
 	<div class="card">
 		<div class="card-header">
@@ -205,6 +284,7 @@
 							{% endfor %}
 							<th class="defectTable_cell_total">Total</th>
 							<th class="defectTable_cell_timespent">Time Spent</th>
+							<th class="defectTable_cell_timespent">Time Spent this Sprint</th>
 							<th class="defectTable_cell_average">Average</th>
 						</tr>
 					</thead>
@@ -219,6 +299,7 @@
 								{% endfor %}
 								<td class="defectTable_cell_total">{{ story['total_count'] }}</td>
 								<td class="defectTable_cell_timespent">{{ story['timespent_on_defects_rendered'] }}</td>
+								<td class="defectTable_cell_timespent">{{ story['timespent_in_this_sprint_on_defects_rendered'] }}</td>
 								<td class="defectTable_cell_average">{{ (story['timespent_on_defects'] / (60 * 60 * story['total_count'])) | round(1, 'common') }}h</td>
 							</tr>
 						{% endfor %}
@@ -231,8 +312,8 @@
 							{% for key, item in defects['defects_total_count'].items() if key != 'Total' %}
 								<th class="defectTable_cell_total" defect_type="{{ key }}">{{ item['count'] }}</th>
 							{% endfor %}
-				
 							<th class="defectTable_cell_total" defect_type="Total">{{ defects['defects_total_count']['Total']['count'] }}</th>
+							<th></th>
 							<th></th>
 							<th></th>
 						</tr>
@@ -246,6 +327,19 @@
 							<th></th>
 							<th class="defectTable_cell_timespent" defect_type="Total" actual="{{ defects['defects_total_count']['Total']['timespent'] }}">{{ defects['defects_total_count']['Total']['timespent_rendered'] }}</th>
 							<th></th>
+							<th></th>
+						</tr>
+						<tr>
+							<th>Time Spent this Sprint</th>
+							
+							{% for key, item in defects['defects_total_count'].items() if key != 'Total' %}
+								<th class="defectTable_cell_timespent" defect_type="{{ key }}" actual="{{ item['timespent_in_this_sprint'] }}">{{ item['timespent_in_this_sprint_rendered'] }}</th>
+							{% endfor %}
+							
+							<th></th>
+							<th></th>
+							<th class="defectTable_cell_timespent" defect_type="Total" actual="{{ defects['defects_total_count']['Total']['timespent_in_this_sprint'] }}">{{ defects['defects_total_count']['Total']['timespent_in_this_sprint_rendered'] }}</th>
+							<th></th>
 						</tr>
 						<tr>
 							<th>Average</th>
@@ -254,6 +348,7 @@
 								<th class="defectTable_cell_average" defect_type="{{ key }}">{{ (item['timespent'] / (60 * 60 * item['count']))|round(1, 'common') }}h</th>
 							{% endfor %}
 							
+							<th></th>
 							<th></th>
 							<th></th>
 							<th class="defectTable_cell_average" defect_type="Total">{{ (defects['defects_total_count']['Total']['timespent'] / (60 * 60 * defects['defects_total_count']['Total']['count']))|round(1, 'common') }}h</th>
@@ -267,38 +362,6 @@
 			</div>
 		</div>
 	</div>
-
-	<br>
-
-		
-
-
-	<!-- SUPPORT TASKS -->
-
-	<br>
-
-	<div class="card" style="width: 22rem;">
-		<div class="card-header">
-			<img src="{{ support.iconUrl }}" height="25" width="25" style="vertical-align: center"> Support Tasks
-		</div>
-		<ul class="list-group list-group-flush">
-			<li class="list-group-item">Number of Support Tasks<strong style="float: right;">{{ support.count }}</strong></li>
-			<li class="list-group-item">Time Spent on Support<strong style="float: right;">{{ support.timespent_rendered }}</strong></li>
-		</ul>
-	</div>
-
-	<!-- OVERALL SPRINT -->
-
-<!-- 	<br>
-	<div class="card" style="width: 30rem;">
-		<div class="card-header">
-			Sprint Summary
-		</div>
-		<ul class="list-group list-group-flush">
-			<li class="list-group-item"><strong style="float: right;">{{ support.count }}</strong></li>
-			<li class="list-group-item">Time Spent on Support<strong style="float: right;">{{ support.timespent_rendered }}</strong></li>
-		</ul>
-	</div> -->
 
 
 
@@ -540,8 +603,8 @@
 
     	var options = {
     		title: '',
-    		height: 600,
-      		width: 600,
+    		height: 500,
+      		width: 500,
       		legend: {
       			position: 'top'
       		}
@@ -597,7 +660,7 @@
     		],
     		title: {
     			display: true,
-    			text: 'Total Timespent on each defect rootcause in sprint [Hours]',
+    			text: 'Total timespent on each defect rootcause in sprint [Hours]',
     			fontFamily: 'Avenir-Roman',
     			fontSize: 16,
     			fontColor: '#454a54',

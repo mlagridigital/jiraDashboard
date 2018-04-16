@@ -1,7 +1,12 @@
-from flask import render_template, jsonify
+from flask import render_template, jsonify, redirect, url_for
 from app import app
 import requests, json
 from . import apiRequests
+# from flask.ext.cache import Cache
+
+# cache = Cache(app, config={'CACHE_TYPE': 'simple'})
+
+
 
 
 @app.route('/')
@@ -11,7 +16,7 @@ def index():
 	return render_template('index.html', all_sprints = all_sprints)
 
 @app.route('/sprint/<int:sprint_id>')
-def sprint_dashboard(sprint_id):
+def sprint_dashboard(sprint_id, sort_field="key", sort_direction="ascending"):
 
 	# all_sprints = apiRequests.get_all_sprints()
 	# this_sprint = apiRequests.get_sprint(sprint_id, all_sprints)
@@ -42,7 +47,7 @@ def sprint_dashboard(sprint_id):
 
 	stories = data['stories']
 
-	stories = apiRequests.sort_table(stories, 'key', 'ascending')
+	stories = apiRequests.sort_table(stories, sort_field, sort_direction)
 
 	# frontend_burndown = backend_burndown
 	# test_burndown = backend_burndown
@@ -63,6 +68,14 @@ def sprint_dashboard(sprint_id):
 		sprint_summary = sprint_summary,
 		support = (data['support']),
 		)
+
+
+# @app.route('/sprint/<int:sprint_id>/sort/<string:field>/<string:direction>')
+# def sort_table(sprint_id, field, direction):
+	
+# 	return redirect(url_for('sprint_dashboard', sprint_id = sprint_id, sort_field = field, sort_direction = direction))
+
+
 
 @app.route('/sprint/<int:sprint_id>/data')
 def json_data(sprint_id):
@@ -100,20 +113,20 @@ def json_data(sprint_id):
 
 	defects = apiRequests.get_defects(data['stories'])
 
-	# return jsonify(
-	# 	stories = (data['stories']),
-	# 	sprint_burndown = sprint_burndown,
-	# 	backend_burndown = backend_burndown,
-	# 	frontend_burndown = frontend_burndown,
-	# 	test_burndown = test_burndown,
-	# 	defects = defects,
-	# 	all_sprints = all_sprints,
-	# 	this_sprint = this_sprint,
-	# 	sprint_summary = sprint_summary,
-	# 	support = (data['support']),
-	# 	)
+	return jsonify(
+		stories = (data['stories']),
+		sprint_burndown = sprint_burndown,
+		backend_burndown = backend_burndown,
+		frontend_burndown = frontend_burndown,
+		test_burndown = test_burndown,
+		defects = defects,
+		all_sprints = all_sprints,
+		this_sprint = this_sprint,
+		sprint_summary = sprint_summary,
+		support = (data['support']),
+		)
 
-	return jsonify (data = data['stories'])
+	# return jsonify (data = data['stories'])
 
 
 #--------------------- TEST ---------------------#

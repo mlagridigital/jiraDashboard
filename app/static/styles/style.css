@@ -266,8 +266,8 @@ tr.defectTable_row {
 }
 
 th.defectTable_cell_storyKey{
-	/*min-width: 80px;*/
-	width: 100px;
+	min-width: 120px;
+	width: 120px;
 }
 
 td.defectTable_cell_defectType, th.defectTable_cell_defectType {
@@ -296,5 +296,30 @@ td.defectTable_cell_average, th.defectTable_cell_average {
 }
 
 
+.card {
+	margin-top: 2%;
+	margin-bottom: 2%;
+}
 
+.card-columns {
+	column-count: 2;
+}
 
+.card.in_columns {
+	margin-right: 4%;
+}
+
+th.issuetypeTable_issuetype, td.issuetypeTable_issuetype {
+	min-width: 100px;
+	text-align: left;
+}
+
+th.issuetypeTable_count, td.issuetypeTable_count {
+	min-width: 60px;
+	text-align: right;
+}
+
+th.issuetypeTable_time, td.issuetypeTable_time {
+	min-width: 130px;
+	text-align: right;
+}
