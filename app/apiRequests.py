@@ -659,7 +659,7 @@ def issue_completed_in_sprint_number(resolutiondate, sprints):
 
         for sprint in sprints:
             if resolutiondate <= sprint['endDate']:
-                print("Issue completed in sprint:", sprint['id'])
+                # print("Issue completed in sprint:", sprint['id'])
                 # print(type(sprint['id']))
                 # print((sprint['id']))
                 return sprint['id']
@@ -1314,7 +1314,7 @@ def start(sprint):
         'sprint_summary': False,
     }
 
-    OFFLINE_MODE = False
+    OFFLINE_MODE = True
 
     if OFFLINE_MODE:
         with open('stories.pkl', 'rb') as f:

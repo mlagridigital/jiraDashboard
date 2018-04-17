@@ -1,4 +1,5 @@
-from flask import render_template, jsonify, redirect, url_for
+from flask import render_template, jsonify, redirect, url_for, request, Response
+from functools import wraps
 from app import app
 import requests, json
 from . import apiRequests
@@ -7,15 +8,38 @@ from . import apiRequests
 # cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
 
+def check_auth(username, password):
+    """This function is called to check if a username /
+    password combination is valid.
+    """
+    return username == 'admin' and password == 'AgridigitalDashboard001'
+
+def authenticate():
+    """Sends a 401 response that enables basic auth"""
+    return Response(
+    'Could not verify your access level for that URL.\n'
+    'You have to login with proper credentials', 401,
+    {'WWW-Authenticate': 'Basic realm="Login Required"'})
+
+def requires_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth = request.authorization
+        if not auth or not check_auth(auth.username, auth.password):
+            return authenticate()
+        return f(*args, **kwargs)
+    return decorated
 
 
 @app.route('/')
+@requires_auth
 def index():
 
 	all_sprints = apiRequests.get_all_sprints()
 	return render_template('index.html', all_sprints = all_sprints)
 
 @app.route('/sprint/<int:sprint_id>')
+@requires_auth
 def sprint_dashboard(sprint_id, sort_field="issuetype", sort_direction="ascending"):
 
 	# all_sprints = apiRequests.get_all_sprints()
@@ -78,6 +102,7 @@ def sprint_dashboard(sprint_id, sort_field="issuetype", sort_direction="ascendin
 
 
 @app.route('/sprint/<int:sprint_id>/data')
+@requires_auth
 def json_data(sprint_id):
 	# all_sprints = apiRequests.get_all_sprints()
 	# this_sprint = apiRequests.get_sprint(sprint_id, all_sprints)
