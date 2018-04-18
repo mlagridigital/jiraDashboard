@@ -114,121 +114,127 @@
 		</div>
 
 		<div class="card-body" style="padding: 0px 0px 0px 0px;">
-			<table class="table table-responsive" style="margin-bottom: 0px">
-				
-				<thead id="table_stories_header">
-					<tr>
-						<th class="cell_key">Issue Key</th>
-						<th class="cell_issuetype">Issue Type</th>
-						<th class="cell_summary">Summary</th>
-						<th class="cell_subtasks">Subtask</th>
-						<th>Status               </th>
-						<th>Assignee      </th>
-						<th class="cell_time">Original Estimate</th>
-						<th class="cell_time">Time Spent</th>
-						<th class="cell_time">Time Spent this Sprint</th>
-						<th class="cell_time">Remaining Time</th>
-						<th class="cell_progress" colspan="2">Progress</th>
-						<th class="cell_TSvsOE" colspan="2">TS vs OE</th>
-						<!-- <th class="cell_TSvsOE"></th> -->
-						<th>To Do </th>
-						<th>In Dev</th>
-						<th>DevRev</th>
-						<th>Aw UAT</th>
-						<th>Re Opd</th>
-						<th>Done  </th>
-					</tr>
-				</thead>
-
-				<tbody>
-					{% for issue in stories %}
-						<tr class="row_story">
-
-							<td class="cell_key"><a href="{{ issue.self }}">{{ issue.key }}</a></td>
-							<td class="cell_issuetype"><img src="{{ issue.issuetypeIcon }}" height="15" width="15"> {{ issue.issuetype }}</td>
-							<td class="cell_summary">{{ issue.summary }}</td>
-							<td class="cell_subtasks" style="text-align: center;">{% if issue.subtasks|length > 0 %}+ {{ issue.subtasks|length }}{% endif %}</td>
-							<td class="cell_status">{{ issue.status }}</td>
-							<td class="cell_assignee">{{ issue.assignee }}</td>
-							<td class="cell_time" actual="{{ issue.aggregatetimeoriginalestimate }}">{% if issue.aggregatetimeoriginalestimate != None %}{{ issue.aggregatetimeoriginalestimate_str }}{% endif %}</td>
-							<td class="cell_time" actual="{{ issue.aggregatetimespent }}">{% if issue.aggregatetimespent != None %}{{ issue.aggregatetimespent_str }}{% endif %}</td>
-							<td class="cell_time" actual="{{ issue.aggregatetimespent_in_this_sprint }}">{% if issue.aggregatetimespent_in_this_sprint != None %}{{ issue.aggregatetimespent_in_this_sprint_rendered }}{% endif %}</td>
-							<td class="cell_time" actual="{{ issue.aggregatetimeestimate }}">{% if issue.aggregatetimeestimate != None %}{{ issue.aggregatetimeestimate_str }}{% endif %}</td>
-							<td class="cell_progress_percentage">{% if issue.progress != None %}{{ issue.progress }}%{% endif %}</td>
-							<td class="cell_progress"><div class="progress" style="height: 10px; width: 100%"><div class="progress-bar" style="height: 10px; width: {{ issue.progress }}%"></div></div></td>
-							
-							<td class="cell_TSvsOE cell_TSvsOE-time" actual="{{ issue.TSvsOE.value }}">{% if issue.TSvsOE.value != None %}{{ issue.TSvsOE.rendered }}{% endif %}</td>
-							<td class="cell_TSvsOE cell_TSvsOE-trafflic_light"><div class="alert alert-{{ issue.TSvsOE.traffic_light }}">{% if issue.TSvsOE.value != None %}{{ issue.TSvsOE.percentage }}%{% endif %}</div></td>
-
-							<td class="cell_status_count">{% if issue.subtask_status_count['To Do'] > 0 %}{{ issue.subtask_status_count['To Do'] }}{% endif %}</td>
-							<td class="cell_status_count">{% if issue.subtask_status_count['Dev In Progress'] > 0 %}{{ issue.subtask_status_count['Dev In Progress'] }}{% endif %}</td>
-							<td class="cell_status_count">{% if issue.subtask_status_count['Dev Review'] > 0 %}{{ issue.subtask_status_count['Dev Review'] }}{% endif %}</td>
-							<td class="cell_status_count">{% if issue.subtask_status_count['Awaiting UAT'] > 0 %}{{ issue.subtask_status_count['Awaiting UAT'] }}{% endif %}</td>
-							<td class="cell_status_count">{% if issue.subtask_status_count['Reopened'] > 0 %}{{ issue.subtask_status_count['Reopened'] }}{% endif %}</td>
-							<td class="cell_status_count">{% if issue.subtask_status_count['Done'] > 0 %}{{ issue.subtask_status_count['Done'] }}{% endif %}</td>
-							
-
-							{% if issue.subtasks|length > 0 %}
-
-								{% for subtask in issue.subtasks %}
-
-									<tr class="row_subtask">
-										
-										<td><a href="{{ subtask.self }}">{{ subtask.key }}</td></a>
-										<td><img src="{{ subtask.issuetypeIcon }}" height="15" width="15"> {{ subtask.issuetype }}</td>
-										<td class="cell_summary">{{ subtask.summary }}</td>
-										<td>{{ subtask.devteam }}</td>
-										<td>{{ subtask.status }}{% if subtask.completed_in_sprint != this_sprint.id and subtask.completed_in_sprint != None %} [{{ subtask.completed_in_sprint }}]{% endif %}</td>
-										<td>{{ subtask.assignee }}</td>
-										<td class="cell_time" actual="{{ subtask.timeoriginalestimate }}">{% if subtask.timeoriginalestimate != None %}{{ subtask.timeoriginalestimate_rendered }}{% endif %}</td>
-										<td class="cell_time" actual="{{ subtask.timespent }}">{% if subtask.timespent != None %}{{ subtask.timespent_rendered }}{% endif %}</td>
-										<td class="cell_time" actual="{{ subtask.timespent_in_this_sprint }}">{% if subtask.timespent_in_this_sprint != None %}{{ subtask.timespent_in_this_sprint_rendered }}{% endif %}</td>
-										<td class="cell_time" actual="{{ subtask.timeestimate }}">{% if subtask.timeestimate != None %}{{ subtask.timeestimate_rendered }}{% endif %}</td>
-										<td class="cell_progress_percentage">{% if subtask.progress != None %}{{ subtask.progress }}%{% endif %}</td>
-										<td class="cell_progress"><div class="progress" style="height: 10px; width: 100%"><div class="progress-bar bg-warning" style="height: 10px; width: {{ subtask.progress }}%"></div></div></td>
-										
-										<td class="cell_TSvsOE" actual="{{ subtask.TSvsOE.value }}">{% if subtask.TSvsOE.value != None %}{{ subtask.TSvsOE.rendered }}{% endif %}</td>
-										<td class="cell_TSvsOE"><div class="alert alert-{{ subtask.TSvsOE.traffic_light }}">{% if subtask.TSvsOE.value != None %}{{ subtask.TSvsOE.percentage }}%{% endif %}</div></td>
-										
-										<td class="cell_status_count">{% if subtask.status == 'To Do' %}*{% endif %}</td>
-										<td class="cell_status_count">{% if subtask.status == 'Dev In Progress' %}*{% endif %}</td>
-										<td class="cell_status_count">{% if subtask.status == 'Dev Review' %}*{% endif %}</td>
-										<td class="cell_status_count">{% if subtask.status == 'Awaiting UAT' %}*{% endif %}</td>
-										<td class="cell_status_count">{% if subtask.status == 'Reopened' %}*{% endif %}</td>
-										<td class="cell_status_count">{% if subtask.status == 'Done' %}*{% endif %}</td>
-										
-									</tr>
-
-								{% endfor %}
-
-							{% endif %}
-
+			<div style="overflow-x: scroll;">
+				<table id="stories_table" class="table table-responsive" style="margin-bottom: 0px">
+					
+					<thead id="table_stories_header">
+						<tr>
+							<th class="cell_key">Issue Key</th>
+							<th class="cell_issuetype">Issue Type</th>
+							<th class="cell_summary">Summary</th>
+							<th class="cell_subtasks">Subtask</th>
+							<th>Assignee</th>
+							<th>Fix</th>
+							<th>Status</th>
+							<th class="cell_time">Original Estimate</th>
+							<th class="cell_time">Time Spent</th>
+							<th class="cell_time">Time Spent this Sprint</th>
+							<th class="cell_time">Remaining Time</th>
+							<th class="cell_progress" colspan="2">Progress</th>
+							<th class="cell_TSvsOE" colspan="2">TS vs OE</th>
+							<!-- <th class="cell_TSvsOE"></th> -->
+							<th>To Do </th>
+							<th>In Dev</th>
+							<th>DevRev</th>
+							<th>Aw UAT</th>
+							<th>Re Opd</th>
+							<th>Done  </th>
 						</tr>
-					{% endfor %}
-				</tbody>
+					</thead>
 
-				<tfoot>
-					<th></th>
-					<th></th>
-					<th class="cell_summary"></th>
-					<th></th>
-					<th></th>
-					<th></th>
-					<th class="cell_time">{{ sprint_summary['aggregatetimeoriginalestimate_rendered'] }}</th>
-					<th class="cell_time">{{ sprint_summary['aggregatetimespent_rendered'] }}</th>
-					<th class="cell_time">{{ sprint_summary['aggregatetimespent_in_this_sprint_rendered'] }}</th>
-					<th class="cell_time">{{ sprint_summary['aggregatetimeestimate_rendered'] }}</th>		
-					<th class="cell_progress_percentage">{{ sprint_summary['progress'] }}%</th>
-					<th></th>
-					<th class="cell_TSvsOE" colspan="2" style="text-align: left;" >TS < OE: {{ sprint_summary['accuracy']['over_estimates']['TSvsOE_rendered'] }}<div>TS > OE: {{ sprint_summary['accuracy']['under_estimates']['TSvsOE_rendered'] }}</div></th>
-					<th class="cell_status_count">{{ sprint_summary['subtask_status']['To Do'] }}</th>
-					<th class="cell_status_count">{{ sprint_summary['subtask_status']['Dev In Progress'] }}</th>
-					<th class="cell_status_count">{{ sprint_summary['subtask_status']['Dev Review'] }}</th>
-					<th class="cell_status_count">{{ sprint_summary['subtask_status']['Awaiting UAT'] }}</th>
-					<th class="cell_status_count">{{ sprint_summary['subtask_status']['Reopened'] }}</th>
-					<th class="cell_status_count">{{ sprint_summary['subtask_status']['Done'] }}</th>
-				</tfoot>
-			</table>
+					<tbody>
+						{% for issue in stories %}
+							<tr class="row_story">
+
+								<td class="cell_key"><a href="{{ issue.self }}">{{ issue.key }}</a></td>
+								<td class="cell_issuetype"><img src="{{ issue.issuetypeIcon }}" height="15" width="15"> {{ issue.issuetype }}</td>
+								<td class="cell_summary">{{ issue.summary }}</td>
+								<td class="cell_subtasks" style="text-align: center;">{% if issue.subtasks|length > 0 %}+ {{ issue.subtasks|length }}{% endif %}</td>
+								<td class="cell_assignee">{{ issue.assignee }}</td>
+								<td class="cell_fix">{% for fix in issue.fixVersions %}{{ fix.name }} {% endfor %}</td>
+								<td class="cell_status">{{ issue.status }}</td>
+								<td class="cell_time" actual="{{ issue.aggregatetimeoriginalestimate }}">{% if issue.aggregatetimeoriginalestimate != None %}{{ issue.aggregatetimeoriginalestimate_str }}{% endif %}</td>
+								<td class="cell_time" actual="{{ issue.aggregatetimespent }}">{% if issue.aggregatetimespent != None %}{{ issue.aggregatetimespent_str }}{% endif %}</td>
+								<td class="cell_time" actual="{{ issue.aggregatetimespent_in_this_sprint }}">{% if issue.aggregatetimespent_in_this_sprint != None %}{{ issue.aggregatetimespent_in_this_sprint_rendered }}{% endif %}</td>
+								<td class="cell_time" actual="{{ issue.aggregatetimeestimate }}">{% if issue.aggregatetimeestimate != None %}{{ issue.aggregatetimeestimate_str }}{% endif %}</td>
+								<td class="cell_progress_percentage">{% if issue.progress != None %}{{ issue.progress }}%{% endif %}</td>
+								<td class="cell_progress"><div class="progress" style="height: 10px; width: 100%"><div class="progress-bar" style="height: 10px; width: {{ issue.progress }}%"></div></div></td>
+								
+								<td class="cell_TSvsOE cell_TSvsOE-time" actual="{{ issue.TSvsOE.value }}">{% if issue.TSvsOE.value != None %}{{ issue.TSvsOE.rendered }}{% endif %}</td>
+								<td class="cell_TSvsOE cell_TSvsOE-trafflic_light"><div class="alert alert-{{ issue.TSvsOE.traffic_light }}">{% if issue.TSvsOE.value != None %}{{ issue.TSvsOE.percentage }}%{% endif %}</div></td>
+
+								<td class="cell_status_count">{% if issue.subtask_status_count['To Do'] > 0 %}{{ issue.subtask_status_count['To Do'] }}{% endif %}</td>
+								<td class="cell_status_count">{% if issue.subtask_status_count['Dev In Progress'] > 0 %}{{ issue.subtask_status_count['Dev In Progress'] }}{% endif %}</td>
+								<td class="cell_status_count">{% if issue.subtask_status_count['Dev Review'] > 0 %}{{ issue.subtask_status_count['Dev Review'] }}{% endif %}</td>
+								<td class="cell_status_count">{% if issue.subtask_status_count['Awaiting UAT'] > 0 %}{{ issue.subtask_status_count['Awaiting UAT'] }}{% endif %}</td>
+								<td class="cell_status_count">{% if issue.subtask_status_count['Reopened'] > 0 %}{{ issue.subtask_status_count['Reopened'] }}{% endif %}</td>
+								<td class="cell_status_count">{% if issue.subtask_status_count['Done'] > 0 %}{{ issue.subtask_status_count['Done'] }}{% endif %}</td>
+								
+
+								{% if issue.subtasks|length > 0 %}
+
+									{% for subtask in issue.subtasks %}
+
+										<tr class="row_subtask">
+											
+											<td><a href="{{ subtask.self }}">{{ subtask.key }}</a></td>
+											<td><img src="{{ subtask.issuetypeIcon }}" height="15" width="15"> {{ subtask.issuetype }}</td>
+											<td class="cell_summary">{{ subtask.summary }}</td>
+											<td class="cell_subtasks">{{ subtask.devteam }}</td>
+											<td>{{ subtask.assignee }}</td>
+											<td class="cell_fix">{% for fix in subtask.fixVersions %}{{ fix.name }} {% endfor %}</td>
+											<td>{{ subtask.status }}{% if subtask.completed_in_sprint != this_sprint.id and subtask.completed_in_sprint != None %} [{{ subtask.completed_in_sprint }}]{% endif %}</td>
+											<td class="cell_time" actual="{{ subtask.timeoriginalestimate }}">{% if subtask.timeoriginalestimate != None %}{{ subtask.timeoriginalestimate_rendered }}{% endif %}</td>
+											<td class="cell_time" actual="{{ subtask.timespent }}">{% if subtask.timespent != None %}{{ subtask.timespent_rendered }}{% endif %}</td>
+											<td class="cell_time" actual="{{ subtask.timespent_in_this_sprint }}">{% if subtask.timespent_in_this_sprint != None %}{{ subtask.timespent_in_this_sprint_rendered }}{% endif %}</td>
+											<td class="cell_time" actual="{{ subtask.timeestimate }}">{% if subtask.timeestimate != None %}{{ subtask.timeestimate_rendered }}{% endif %}</td>
+											<td class="cell_progress_percentage">{% if subtask.progress != None %}{{ subtask.progress }}%{% endif %}</td>
+											<td class="cell_progress"><div class="progress" style="height: 10px; width: 100%"><div class="progress-bar bg-warning" style="height: 10px; width: {{ subtask.progress }}%"></div></div></td>
+											
+											<td class="cell_TSvsOE" actual="{{ subtask.TSvsOE.value }}">{% if subtask.TSvsOE.value != None %}{{ subtask.TSvsOE.rendered }}{% endif %}</td>
+											<td class="cell_TSvsOE"><div class="alert alert-{{ subtask.TSvsOE.traffic_light }}">{% if subtask.TSvsOE.value != None %}{{ subtask.TSvsOE.percentage }}%{% endif %}</div></td>
+											
+											<td class="cell_status_count">{% if subtask.status == 'To Do' %}*{% endif %}</td>
+											<td class="cell_status_count">{% if subtask.status == 'Dev In Progress' %}*{% endif %}</td>
+											<td class="cell_status_count">{% if subtask.status == 'Dev Review' %}*{% endif %}</td>
+											<td class="cell_status_count">{% if subtask.status == 'Awaiting UAT' %}*{% endif %}</td>
+											<td class="cell_status_count">{% if subtask.status == 'Reopened' %}*{% endif %}</td>
+											<td class="cell_status_count">{% if subtask.status == 'Done' %}*{% endif %}</td>
+											
+										</tr>
+
+									{% endfor %}
+
+								{% endif %}
+
+							</tr>
+						{% endfor %}
+					</tbody>
+
+					<tfoot>
+						<th></th>
+						<th></th>
+						<th class="cell_summary"></th>
+						<th></th>
+						<th></th>
+						<th></th>
+						<th></th>
+						<th class="cell_time">{{ sprint_summary['aggregatetimeoriginalestimate_rendered'] }}</th>
+						<th class="cell_time">{{ sprint_summary['aggregatetimespent_rendered'] }}</th>
+						<th class="cell_time">{{ sprint_summary['aggregatetimespent_in_this_sprint_rendered'] }}</th>
+						<th class="cell_time">{{ sprint_summary['aggregatetimeestimate_rendered'] }}</th>		
+						<th class="cell_progress_percentage">{{ sprint_summary['progress'] }}%</th>
+						<th></th>
+						<th class="cell_TSvsOE" colspan="2" style="text-align: left;" >TS < OE: {{ sprint_summary['accuracy']['over_estimates']['TSvsOE_rendered'] }}<div>TS > OE: {{ sprint_summary['accuracy']['under_estimates']['TSvsOE_rendered'] }}</div></th>
+						<th class="cell_status_count">{{ sprint_summary['subtask_status']['To Do'] }}</th>
+						<th class="cell_status_count">{{ sprint_summary['subtask_status']['Dev In Progress'] }}</th>
+						<th class="cell_status_count">{{ sprint_summary['subtask_status']['Dev Review'] }}</th>
+						<th class="cell_status_count">{{ sprint_summary['subtask_status']['Awaiting UAT'] }}</th>
+						<th class="cell_status_count">{{ sprint_summary['subtask_status']['Reopened'] }}</th>
+						<th class="cell_status_count">{{ sprint_summary['subtask_status']['Done'] }}</th>
+					</tfoot>
+				</table>
+			</div>
 		</div>
 
 	</div>
@@ -389,7 +395,7 @@
 
 	
 	$('div.row').on('click', 'button.btn-expand_all', function(event) {
-		$('tr.row_subtask').attr("style", "display: table-row;");
+		$('tr.row_subtask').show();
 		$(this).removeClass("btn-success");
 		$(this).addClass("btn-warning");
 		$(this).removeClass("btn-expand_all");
@@ -426,22 +432,28 @@
 		$(this).text("Show TS vs OE");
 	})
 
+
+
+
+
+
+
 </script>
 
 <!-- CHARTS JAVASCRIPT -->
 <script type="text/javascript">
 
- //    var ticks_list = [];
-	// var millieconds_per_day = 1000*60*60*24;
-	// var start_date = new Date('{{ stories[0]['sprints'][0]['startDate'] }}');
-	// start_date.setMilliseconds(0);
-	// start_date.setSeconds(0);
-	// start_date.setMinutes(0);
-	// start_date.setHours(0);
+    var ticks_list = [];
+	var millieconds_per_day = 1000*60*60*24;
+	var start_date = new Date('{{ this_sprint['startDate'] }}');
+	start_date.setMilliseconds(0);
+	start_date.setSeconds(0);
+	start_date.setMinutes(0);
+	start_date.setHours(0);
 
-	// for(i = 1; i < 14; i++){
-	// 	ticks_list.push(new Date(Date.parse(start_date) + i * millieconds_per_day))
-	// };
+	for(i = 1; i < 14; i++){
+		ticks_list.push(new Date(Date.parse(start_date) + i * millieconds_per_day))
+	};
 
 	google.charts.load('current', {'packages':['line', 'corechart']});
     google.charts.setOnLoadCallback(drawSprintBurndown);
@@ -542,8 +554,8 @@
       			min: new Date('{{ this_sprint['startDate'] }}'),
       			max: new Date('{{ this_sprint['endDate'] }}'),
       		},
-      		format: 'MMM d hh:mm',
-      		// ticks: ticks_list,
+      		// format: 'MMM d hh:mm',
+      		ticks: ticks_list,
         },
         vAxis: {
         	title: 'Time Estimate [Hours]',

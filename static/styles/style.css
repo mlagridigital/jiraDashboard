@@ -112,15 +112,16 @@ td.cell_summary {
 }
 
 th.cell_summary, td.cell_summary {
-	display: none;
+	/*display: none;*/
+	min-width: 400px;
 }
 
-@media only screen and (min-width: 1920px){
+/*@media only screen and (min-width: 1920px){
 	th.cell_summary, td.cell_summary {
 		display: table-cell;
 		max-width: 600px;
 	}
-}
+}*/
 
 
 td.cell_subtasks {
